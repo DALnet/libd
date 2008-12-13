@@ -1,0 +1,64 @@
+
+Socket API
+----------
+
+
+SOCK = init_socketengine():
+	creates the socket engine handle
+
+LISTEN = SOCK->create_listener():
+	Called with listener details and a callback function
+	The callback function will provide a CLIENT structure
+
+LISTEN->qopts():
+	Sets the listener queuing options
+
+LISTEN->set_packeter():
+	Sets the message delination parser (identifies the end of messages).
+
+LISTEN->set_parser():
+	Sets the message parser for a listener
+
+SOCK->poll():
+	Will do a socket wait call..
+
+CLIENT->send():
+	Enqueue information to send to the client
+
+CLIENT->close():
+	Close and destroy the client connection
+
+CLIENT->qopts():
+	Set client queuing options
+
+GROUP = SOCK->create_group():
+	Creates a group to which clients can be associated
+
+GROUP->add():
+	Add a client to a group
+
+GROUP->remove():
+	Remove a client from a group
+
+GROUP->destroy():
+	Destroy a group.
+
+GROUP = GROUP->create_subgroup():
+	Create a group owned by a higher level group.
+
+GROUP->send():
+	Send a message to a group.
+
+
+Function requirements:
+
+Listener Callback:
+	- Acts as an on-connect hook function.  Optional.
+
+Packeter:
+	- Recieves a packet buffer from a client and returns
+	  a pointer to the end of a specific parsable message.
+
+Parser:
+	- Recieves a message buffer, start and end pointers to the message
+	  for a specific client.

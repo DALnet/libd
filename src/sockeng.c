@@ -4,15 +4,22 @@
 
 #include "sockeng.h"
 
-/* explanation:
- *   I hate sharing scope when I don't have to.
- *   This will be a library, therefor we're going to
- *   make one nice pretty object at the end of it.
- */
+extern Group *create_supergroup(SockEng *s);
+extern Listener *create_listener(SockEng *s);
 
-#include "listener.c"
-#include "group.c"
-#include "client.c"
+static int fake_poll(SockEng *s)
+{
+	return 0;
+}
+
+static int set_errorhandler(SockEng *s, void (*func)())
+{
+	if(s) {
+		s->error = func;
+		return 0;
+	}
+	return -1;
+}
 
 SockEng *init_sockeng()
 {
@@ -28,7 +35,8 @@ SockEng *init_sockeng()
 	/* functions */
 	new->create_listener = create_listener;
 	new->create_group = create_supergroup;
-	new->poll = NULL;
+	new->poll = fake_poll;
+	new->set_errorhandler = set_errorhandler;
 
 	return new;
 }

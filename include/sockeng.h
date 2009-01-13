@@ -27,6 +27,9 @@ typedef struct _clink		cLink;		/* link structure for clients */
 /*
  * This structure allows us to handle IPV6 and IPV4 easily
  */
+#define TYPE_NONE 0
+#define TYPE_IPV4 1
+#define TYPE_IPV6 2
 struct _ipvx {
 	short	type;
 	union {

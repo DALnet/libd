@@ -6,6 +6,7 @@
 #define SOCKENG_H
 
 #include <stdio.h>
+#include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -69,10 +70,18 @@ struct _client {
 	unsigned short	port;			/* the remote port */
 	int		type;			/* the type of this connection (tcp/udp/raw) */
 
+	Listener	*listener;		/* listener this client came in on (optional) */
+
 	/* functions */
 	int		(*send)();
 	int		(*close)();
 	int		(*qopts)();
+
+	int		(*set_packeter)();
+	int		(*set_parser)();
+
+	char		*(*packeter)();
+	int		(*parser)();
 };
 
 /*
@@ -80,10 +89,12 @@ struct _client {
  */
 struct _listener {
 	int 		fd;		/* file descriptor of the listener */
-	u_short 	port;		/* port of the descriptor */
+	unsigned short 	port;		/* port of the descriptor */
 	unsigned int 	count;		/* count of the clients connected */
 	ipvx		addr;		/* address of the listener to bind to */
 	time_t		last;		/* TS of last connect */
+
+	SockEng		*sockeng;	/* socket engine this is running on */
 
 	int		flags;		/* flags? */
 
@@ -104,6 +115,8 @@ struct _listener {
 struct _group {
 	cLink	 	*clients;		/* clients in this group */
 	gLink		*groups;		/* subgroups to this group */
+
+	Group		*parent;		/* parent group (if applicable) */
 
 	int		(*add)(Group *gr, Client *cl);		/* function for adding clients to this group */
 	int		(*remove)(Group *gr, Client *cl);	/* function for removing clients from this group */
@@ -126,6 +139,8 @@ struct _sockeng {
 	Listener	*(*create_listener)();
 	Group		*(*create_group)();
 	int		(*poll)();
+	int		(*set_errorhandler)();
+	void		(*error)();
 };
 
 #endif

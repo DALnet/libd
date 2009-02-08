@@ -32,20 +32,20 @@ static int listener_setparser(Listener *l, int (*func)())
 	return -1;
 }
 
-static int listener_setsockopts(int fd)
+static int listener_setsockopts(myfd fdp)
 {
 	int opt, ret;
 
 #ifdef SO_REUSEADDR
 	opt = 1;
-	ret = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (char *) &opt, sizeof(opt));
+	ret = setsockopt(fdp.fd, SOL_SOCKET, SO_REUSEADDR, (char *) &opt, sizeof(opt));
 	if(ret < 0)
 		return ret;
 #endif /* SO_REUSEADDR */
 
 #ifdef SO_USELOOPBACK
 	opt = 1;
-	ret = setsockopt(fd, SOL_SOCKET, SO_USELOOPBACK, (char *) &opt, sizeof(opt));
+	ret = setsockopt(fdp.fd, SOL_SOCKET, SO_USELOOPBACK, (char *) &opt, sizeof(opt));
 	if(ret < 0)
 		return ret;
 #endif /* SO_USELOOPBACK */
@@ -55,22 +55,22 @@ static int listener_setsockopts(int fd)
 	return 0;
 }
 
-static int listener_listen(int fd)
+static int listener_listen(myfd fdp)
 {
 	int res, nonb = 0;
 
         /* set to 24, since it seems reasonable for now */
-        if(listen(fd, 24)) {
+        if(listen(fdp.fd, 24)) {
                 /* FIXME:  error reporting */
                 return -1;
         }
 
 	nonb |= O_NONBLOCK;
-	if((res = fcntl(fd, F_GETFL, 0)) == -1) {
+	if((res = fcntl(fdp.fd, F_GETFL, 0)) == -1) {
 		/* FIXME:  error reporting */
 		;
 	}
-	else if (fcntl(fd, F_SETFL, res | nonb) == -1) {
+	else if (fcntl(fdp.fd, F_SETFL, res | nonb) == -1) {
 		/* FIXME:  error reporting */
 		;
 	}
@@ -81,10 +81,10 @@ static int create_tcp6_listener(Listener *l)
 {
 	struct sockaddr_in6 s;
 
-	l->fd = socket(AF_INET6, SOCK_STREAM, 0);
-	if(l->fd < 0)
+	l->fdp.fd = socket(AF_INET6, SOCK_STREAM, 0);
+	if(l->fdp.fd < 0)
 		return -1;
-	if(listener_setsockopts(l->fd))
+	if(listener_setsockopts(l->fdp))
 		goto out_err;
 
 	memset(&s, '\0', sizeof(s));
@@ -98,18 +98,18 @@ static int create_tcp6_listener(Listener *l)
 	s.sin6_port = l->port;
 
 	/* FIXME:  error reporting */
-	if(bind(l->fd, (struct sockaddr *) &s, sizeof(s)))
+	if(bind(l->fdp.fd, (struct sockaddr *) &s, sizeof(s)))
 		goto out_err;
 
-	if(listener_listen(l->fd))
+	if(listener_listen(l->fdp))
 		goto out_err;
 
 	/* FIXME:  set want read */
 	return 0;
 
 out_err:
-	close(l->fd);
-	l->fd = -1;
+	close(l->fdp.fd);
+	l->fdp.fd = -1;
 	return -1;
 }
 
@@ -117,11 +117,11 @@ static int create_tcp4_listener(Listener *l)
 {
 	struct sockaddr_in s;
 
-	l->fd = socket(AF_INET, SOCK_STREAM, 0);
-	if(l->fd < 0)
+	l->fdp.fd = socket(AF_INET, SOCK_STREAM, 0);
+	if(l->fdp.fd < 0)
 		return -1;
 
-	if(listener_setsockopts(l->fd))
+	if(listener_setsockopts(l->fdp))
 		goto out_err;
 
 	memset(&s, '\0', sizeof(s));
@@ -135,18 +135,18 @@ static int create_tcp4_listener(Listener *l)
 	s.sin_port = l->port;
 
 	/* FIXME:  error reporting */
-	if(bind(l->fd, (struct sockaddr *) &s, sizeof(s)))
+	if(bind(l->fdp.fd, (struct sockaddr *) &s, sizeof(s)))
 		goto out_err;
 
-	if(listener_listen(l->fd))
+	if(listener_listen(l->fdp))
 		goto out_err;
 
 	/* FIXME:  set want read */
 	return 0;
 
 out_err:
-	close(l->fd);
-	l->fd = -1;
+	close(l->fdp.fd);
+	l->fdp.fd = -1;
 	return -1;
 }
 
@@ -163,7 +163,8 @@ Listener *create_listener(SockEng *s, unsigned short port, ipvx *address)
 
 	/* data */
 
-	new->fd = -1;
+	new->fdp.fd = -1;
+	new->fdp.owner = new;
 	new->port = port;
 	new->count = 0;
 	if(address)

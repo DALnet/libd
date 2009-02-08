@@ -12,6 +12,8 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#define MAX_FDS 1024		/* maximum supported file descriptors */
+
 #define BUFSIZE 4096
 
 /* typedefs make life easier */
@@ -23,6 +25,7 @@ typedef struct _listener 	Listener;	/* a Listener */
 typedef struct _llink 		lLink;		/* link structure for listeners */
 typedef struct _glink 		gLink;		/* link structure for groups */
 typedef struct _clink		cLink;		/* link structure for clients */
+typedef struct _mfd		myfd;		/* file descriptor abstraction */
 
 /*
  * This structure allows us to handle IPV6 and IPV4 easily
@@ -61,11 +64,19 @@ struct _glink {
 	gLink		*next, *prev, *head;	/* link list stuff */
 };
 
+/* file descriptor abstraction for socket engine use */
+struct _mfd {
+	int		fd;
+	int		state;
+	void		*owner;
+	void		*cb;
+};
+
 /*
  * The client structure provides all necessary details in order to communicate with a client
  */
 struct _client {
-	int		fd;			/* file descriptor of this client */
+	myfd		fdp;			/* file descriptor abstraction */
 	ipvx		addr;			/* address of the client */
 	unsigned int	bufsize;		/* current size of the buffer */
 	char		buffer[BUFSIZE];	/* the buffer! */
@@ -91,7 +102,7 @@ struct _client {
  * The listener structure provides all necessary details in order to build and maintain a listener
  */
 struct _listener {
-	int 		fd;		/* file descriptor of the listener */
+	myfd		fdp;		/* file descriptor abstraction */
 	unsigned short 	port;		/* port of the descriptor */
 	unsigned int 	count;		/* count of the clients connected */
 	ipvx		addr;		/* address of the listener to bind to */
@@ -137,6 +148,8 @@ struct _sockeng {
 	gLink		*groups;
 	cLink		*clients;
 	lLink		*listeners;
+
+	myfd		*local[MAX_FDS];
 
 	/* functions */
 	Listener	*(*create_listener)();

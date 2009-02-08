@@ -50,7 +50,8 @@ Client *create_client_t(Listener *l)
 	if(!new)
 		return NULL;
 	
-	new->fd = -1;
+	new->fdp.fd = -1;
+	new->fdp.owner = new;
 	new->addr.type = 0;
 	new->bufsize = 0;
 	new->sockerr = 0;

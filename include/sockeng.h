@@ -11,6 +11,10 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <errno.h>
+#include <unistd.h>
+
+#define DEBUG
 
 #define MAX_FDS 1024		/* maximum supported file descriptors */
 
@@ -64,12 +68,18 @@ struct _glink {
 	gLink		*next, *prev, *head;	/* link list stuff */
 };
 
+
+#define MFD_NONE 0x00
+#define MFD_READ 0x01
+#define MFD_WRITE 0x02
+
 /* file descriptor abstraction for socket engine use */
 struct _mfd {
 	int		fd;
 	int		state;
 	void		*owner;
-	void		*cb;
+	void		(*cb)();
+	void		*internal;
 };
 
 /*

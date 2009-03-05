@@ -10,6 +10,9 @@
 
 #include <sys/select.h>
 
+extern void mfd_set_internal(SockEng *s, int fd, void *ptr);
+extern void *mfd_get_internal(SockEng *s, int fd);
+
 static fd_set g_read_set, g_write_set;
 
 void engine_init(SockEng *s)

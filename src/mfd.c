@@ -3,6 +3,7 @@
  */
 
 #include "sockeng.h"
+#include "engine.h"
 
 static void fd_assert(SockEng *s, myfd *fd)
 {
@@ -28,6 +29,8 @@ int mfd_add(SockEng *s, myfd *fd, void *owner, void (*cb)())
 	fd->state = 0;
 	s->local[fd->fd] = fd;
 
+	engine_add_fd(s, fd->fd);
+
 	return 0;
 }
 
@@ -35,18 +38,21 @@ void mfd_del(SockEng *s, myfd *fd)
 {
 	fd_assert(s, fd);
 	s->local[fd->fd] = NULL;
+	engine_del_fd(s, fd->fd);
 }
 
 void mfd_read(SockEng *s, myfd *fd)
 {
 	fd_assert(s, fd);
 	fd->state |= MFD_READ;
+	engine_change_fd_state(s, fd->fd, MFD_READ);
 }
 
 void mfd_write(SockEng *s, myfd *fd)
 {
 	fd_assert(s, fd);
 	fd->state |= MFD_WRITE;
+	engine_change_fd_state(s, fd->fd, MFD_WRITE);
 }
 
 void mfd_set_internal(SockEng *s, int fd, void *ptr)

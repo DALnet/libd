@@ -32,6 +32,15 @@ static int listener_setparser(Listener *l, int (*func)())
 	return -1;
 }
 
+static int listener_setonconnect(Listener *l, int (*func)())
+{
+	if(l) {
+		l->onconnect = func;
+		return 0;
+	}
+	return -1;
+}
+
 static int listener_setsockopts(myfd fdp)
 {
 	int opt, ret;
@@ -77,6 +86,60 @@ static int listener_listen(myfd fdp)
 	return 0;
 }
 
+static void accept_tcp6_connect(SockEng *s, Listener *l, int rr, int rw)
+{
+	int i, newfd;
+	struct sockaddr_in6 addr;
+	unsigned int addrlen = sizeof(struct sockaddr_in6);
+	Client *new;
+
+	for(i = 0; i < 100; i++) {
+		if((newfd = accept(l->fdp.fd, (struct sockaddr *) &addr, &addrlen)) < 0) {
+			/* FIXME:  error reporting */
+			return;
+		}
+		new = create_client_t(l);
+		new->fdp.fd = newfd;
+		new->addr.type = TYPE_IPV6;
+		memcpy(new->addr.ip.v6, &addr.sin6_addr, sizeof(struct in6_addr));
+		new->port = ntohs(addr.sin6_port);
+		if(l->onconnect != NULL && (*l->onconnect)(new)) {
+			new->close(new);
+			continue;
+		}
+		/* FIXME: set new client socket options */
+		mfd_add(s, &new->fdp, NULL);
+		mfd_read(s, &new->fdp);
+	}
+}
+
+static void accept_tcp4_connect(SockEng *s, Listener *l, int rr, int rw)
+{
+	int i, newfd;
+	struct sockaddr_in addr;
+	unsigned int addrlen = sizeof(struct sockaddr_in);
+	Client *new;
+
+	for(i = 0; i < 100; i++) {
+		if((newfd = accept(l->fdp.fd, (struct sockaddr *) &addr, &addrlen)) < 0) {
+			/* FIXME:  error reporting */
+			return;
+		}
+		new = create_client_t(l);
+		new->fdp.fd = newfd;
+		new->addr.type = TYPE_IPV4;
+		memcpy(new->addr.ip.v4, &addr.sin_addr, sizeof(struct in_addr));
+		new->port = ntohs(addr.sin_port);
+		if(l->onconnect != NULL && (*l->onconnect)(new)) {
+			new->close(new);
+			continue;
+		}
+		/* FIXME:  set new client socket options */
+		mfd_add(s, &new->fdp, NULL);
+		mfd_read(s, &new->fdp);
+	}
+}
+
 static int create_tcp6_listener(Listener *l)
 {
 	struct sockaddr_in6 s;
@@ -104,7 +167,8 @@ static int create_tcp6_listener(Listener *l)
 	if(listener_listen(l->fdp))
 		goto out_err;
 
-	/* FIXME:  set want read */
+	mfd_add(l->sockeng, &l->fdp, l, accept_tcp6_connect);
+	mfd_read(l->sockeng, &l->fdp);
 	return 0;
 
 out_err:
@@ -141,7 +205,8 @@ static int create_tcp4_listener(Listener *l)
 	if(listener_listen(l->fdp))
 		goto out_err;
 
-	/* FIXME:  set want read */
+	mfd_add(l->sockeng, &l->fdp, l, accept_tcp4_connect);
+	mfd_read(l->sockeng, &l->fdp);
 	return 0;
 
 out_err:
@@ -163,6 +228,7 @@ Listener *create_listener(SockEng *s, unsigned short port, ipvx *address)
 
 	/* data */
 
+	new->sockeng = s;
 	new->fdp.fd = -1;
 	new->fdp.owner = new;
 	new->port = port;
@@ -179,6 +245,7 @@ Listener *create_listener(SockEng *s, unsigned short port, ipvx *address)
 	new->qopts = listener_qopts;
 	new->set_packeter = listener_setpacketer;
 	new->set_parser = listener_setparser;
+	new->set_onconnect = listener_setonconnect;
 
 	/* FIXME:  egg problem possible here.. must fix */
 	new->packeter = NULL;

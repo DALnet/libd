@@ -11,13 +11,15 @@
 #include <sys/epoll.h>
 
 #ifdef NEED_EPOLL_DEFS
-#include <asm/unistd.h>
 
 _syscall1(int, epoll_create, int, size)
 _syscall4(int, epoll_ctl, int, epfd, int, op, int, fd, struct epoll_event*, event)
 _syscall4(int, epoll_wait, int, epfd, struct epoll_event*, pevents, int, maxevents, int, timeout)
 
 #endif
+
+extern void mfd_set_internal(SockEng *s, int fd, void *ptr);
+extern void *mfd_get_internal(SockEng *s, int fd);
 
 static int epoll_id = -1, numfds = 0;
 static struct epoll_fd

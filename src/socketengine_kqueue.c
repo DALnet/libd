@@ -11,6 +11,9 @@
 #include <sys/event.h>
 #include <sys/time.h>
 
+extern void mfd_set_internal(SockEng *s, int fd, void *ptr);
+extern void *mfd_get_internal(SockEng *s, int fd);
+
 #define MAX_EVENT_QUEUE 64
 
 static int kqueue_id = -1;

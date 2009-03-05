@@ -125,10 +125,12 @@ struct _listener {
 	int		(*qopts)();		/* function to set options */
 	int		(*set_packeter)();	/* function to set packeter */
 	int		(*set_parser)();	/* function to set parser */
+	int		(*set_onconnect)();	/* function to set the onconnect handler */
 
 
 	char		*(*packeter)();		/* the packeter */
 	int		(*parser)();		/* the parser */
+	int		(*onconnect)(Client *c); /* on-connect client handler */
 };
 
 

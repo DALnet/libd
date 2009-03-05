@@ -10,6 +10,9 @@
 
 #include <sys/poll.h>
 
+extern void mfd_set_internal(SockEng *s, int fd, void *ptr);
+extern void *mfd_get_internal(SockEng *s, int fd);
+
 struct pollfd poll_fds[MAX_FDS];
 int last_pfd = -1;
 
@@ -58,7 +61,7 @@ void engine_del_fd(SockEng *s, int fd)
 
 void engine_change_fd_state(SockEng *s, int fd, unsigned int stateplus)
 {
-	int arrayidx = (int) mfd_get_internal(fd);
+	int arrayidx = (int) mfd_get_internal(s, fd);
 	struct pollfd *pfd = &poll_fds[arrayidx];
 
 	pfd->events = 0;

@@ -8,10 +8,11 @@
 
 #include "sockeng.h"
 
-#include <unistd.h>
-#include <fcntl.h>
 #include <sys/devpoll.h>
 #include <sys/poll.h>
+
+extern void mfd_set_internal(SockEng *s, int fd, void *ptr);
+extern void *mfd_get_internal(SockEng *s, int fd);
 
 static int devpoll_id = -1, numfds = 0;
 

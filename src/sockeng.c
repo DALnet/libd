@@ -3,14 +3,10 @@
  */
 
 #include "sockeng.h"
+#include "engine.h"
 
 extern Group *create_supergroup(SockEng *s);
 extern Listener *create_listener(SockEng *s);
-
-static int fake_poll(SockEng *s)
-{
-	return 0;
-}
 
 static int set_errorhandler(SockEng *s, void (*func)())
 {
@@ -35,8 +31,10 @@ SockEng *init_sockeng()
 	/* functions */
 	new->create_listener = create_listener;
 	new->create_group = create_supergroup;
-	new->poll = fake_poll;
+	new->poll = engine_read_message;
 	new->set_errorhandler = set_errorhandler;
+
+	engine_init(new);
 
 	return new;
 }

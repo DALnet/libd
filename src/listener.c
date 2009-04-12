@@ -100,8 +100,9 @@ static void accept_tcp6_connect(SockEng *s, Listener *l, int rr, int rw)
 		}
 		new = create_client_t(l);
 		new->fdp.fd = newfd;
+		new->fdp.owner = new;
 		new->addr.type = TYPE_IPV6;
-		memcpy(new->addr.ip.v6, &addr.sin6_addr, sizeof(struct in6_addr));
+		memcpy(&new->addr.ip, &addr.sin6_addr, sizeof(struct in6_addr));
 		new->port = ntohs(addr.sin6_port);
 		if(l->onconnect != NULL && (*l->onconnect)(new)) {
 			new->close(new);
@@ -127,8 +128,9 @@ static void accept_tcp4_connect(SockEng *s, Listener *l, int rr, int rw)
 		}
 		new = create_client_t(l);
 		new->fdp.fd = newfd;
+		new->fdp.owner = new;
 		new->addr.type = TYPE_IPV4;
-		memcpy(new->addr.ip.v4, &addr.sin_addr, sizeof(struct in_addr));
+		memcpy(&new->addr.ip, &addr.sin_addr, sizeof(struct in_addr));
 		new->port = ntohs(addr.sin_port);
 		if(l->onconnect != NULL && (*l->onconnect)(new)) {
 			new->close(new);
@@ -158,7 +160,7 @@ static int create_tcp6_listener(Listener *l)
 	else
 		memcpy(&s.sin6_addr, l->addr.ip.v6, sizeof(struct in6_addr));
 
-	s.sin6_port = l->port;
+	s.sin6_port = htons(l->port);
 
 	/* FIXME:  error reporting */
 	if(bind(l->fdp.fd, (struct sockaddr *) &s, sizeof(s)))
@@ -196,7 +198,7 @@ static int create_tcp4_listener(Listener *l)
 	else
 		memcpy(&s.sin_addr.s_addr, l->addr.ip.v4, sizeof(struct in_addr));
 
-	s.sin_port = l->port;
+	s.sin_port = htons(l->port);
 
 	/* FIXME:  error reporting */
 	if(bind(l->fdp.fd, (struct sockaddr *) &s, sizeof(s)))

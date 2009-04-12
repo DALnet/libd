@@ -3,12 +3,10 @@
  */
 
 #include "sockeng.h"
+#include "mfd.h"
 
 static int client_send(Client *c, char *msg, int len)
 {
-	char buffer[512];
-	snprintf(buffer, len > 512 ? len : 512, "%s", msg);
-	printf("Send to client %#x:  %s", c, buffer);
 	return 0;
 }
 
@@ -40,6 +38,28 @@ static int client_setpacketer(Client *c, char *(*func)())
 		return 0;
 	}
 	return -1;
+}
+
+void client_do_rw(SockEng *s, Client *c, int rr, int rw)
+{
+	static char readbuf[8192];
+	int len;
+	char *pack_off;
+
+	if(rr) {
+		printf("got read request on fd %d\n", c->fdp.fd);
+		len = recv(c->fdp.fd, readbuf, sizeof(readbuf), 0);
+		pack_off = c->packeter(c, &readbuf, len);
+		if(pack_off) {
+			/* will enter into the parse queue later */
+			c->parser(c, pack_off);
+		}
+	}
+	if(rw) {
+		printf("got write request on fd %d\n", c->fdp.fd);
+		/* do a send */
+	}
+	return;
 }
 
 Client *create_client_t(Listener *l)

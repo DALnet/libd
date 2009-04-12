@@ -3,11 +3,15 @@
  */
 
 #include "sockeng.h"
+#include "mfd.h"
+
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+
+extern void client_do_rw(SockEng *s, Client *c, int rr, int rw);
 
 static int listener_qopts(Listener *l, int opts)
 {
@@ -109,7 +113,7 @@ static void accept_tcp6_connect(SockEng *s, Listener *l, int rr, int rw)
 			continue;
 		}
 		/* FIXME: set new client socket options */
-		mfd_add(s, &new->fdp, NULL);
+		mfd_add(s, &new->fdp, new, client_do_rw);
 		mfd_read(s, &new->fdp);
 	}
 }
@@ -137,7 +141,7 @@ static void accept_tcp4_connect(SockEng *s, Listener *l, int rr, int rw)
 			continue;
 		}
 		/* FIXME:  set new client socket options */
-		mfd_add(s, &new->fdp, NULL);
+		mfd_add(s, &new->fdp, new, client_do_rw);
 		mfd_read(s, &new->fdp);
 	}
 }

@@ -7,7 +7,7 @@
 
 #include "sockeng.h"
 
-extern void init_engine(SockEng *s);
+extern void engine_init(SockEng *s);
 extern void engine_add_fd(SockEng *s, int fd);
 extern void engine_del_fd(SockEng *s, int fd);
 extern void engine_change_fd_state(SockEng *s, int fd, unsigned int stateplus);

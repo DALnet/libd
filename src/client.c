@@ -7,6 +7,10 @@
 
 static int client_send(Client *c, char *msg, int len)
 {
+	/* buffer it up for sending .. */
+	if(ebuf_put(&c->sendQ, msg, len))
+		return -1;
+	mfd_write(c->sockeng, &c->fdp);
 	return 0;
 }
 
@@ -40,32 +44,55 @@ static int client_setpacketer(Client *c, char *(*func)())
 	return -1;
 }
 
-void client_do_rw(SockEng *s, Client *c, int rr, int rw)
+static void client_doread(Client *c)
 {
 	static char readbuf[BUFSIZE];
 	int len, plen;
 
-	if(rr) {
-		len = recv(c->fdp.fd, readbuf, sizeof(readbuf), 0);
-		if(eBufLength(&c->recvQ) > 0) {
-			if(ebuf_put(&c->recvQ, &readbuf, len))
-				return;
-			len = ebuf_get(&c->recvQ, &readbuf, BUFSIZE);
-			plen = c->packeter(c, &readbuf, len);
-			if(plen)
-				c->parser(c, &readbuf, plen);
-		} else {
-			plen = c->packeter(c, &readbuf, len);
-			if(plen)
-				c->parser(c, &readbuf, plen);
-			else if(ebuf_put(&c->recvQ, &readbuf, len))
-				return;
+	len = recv(c->fdp.fd, readbuf, sizeof(readbuf), 0);
+	if(eBufLength(&c->recvQ) > 0) {
+		if(ebuf_put(&c->recvQ, &readbuf, len))
+			return;
+		len = ebuf_get(&c->recvQ, &readbuf, BUFSIZE);
+		plen = c->packeter(c, &readbuf, len);
+		if(plen) {
+			c->parser(c, &readbuf, plen);
+			ebuf_delete(&c->recvQ, plen);
 		}
+	} else {
+		plen = c->packeter(c, &readbuf, len);
+		if(plen)
+			c->parser(c, &readbuf, plen);
+		else if(ebuf_put(&c->recvQ, &readbuf, len))
+			return;
 	}
-	if(rw) {
-		printf("got write request on fd %d\n", c->fdp.fd);
-		/* do a send */
+	return;
+}
+
+static void client_dowrite(Client *c)
+{
+	static struct iovec v[WRITEV_IOV];
+	int num, ret;
+
+	if(!(eBufLength(&c->sendQ) > 0)) {
+		mfd_unwrite(c->sockeng, &c->fdp);
+		return;
 	}
+	num = ebuf_mapiov(&c->sendQ, v);
+	ret = writev(c->fdp.fd, v, num);
+	if(ret > 0)
+		ebuf_delete(&c->sendQ, ret);
+	if(!(eBufLength(&c->sendQ) > 0))
+		mfd_unwrite(c->sockeng, &c->fdp);
+	return;
+}
+
+void client_do_rw(SockEng *s, Client *c, int rr, int rw)
+{
+	if(rr)
+		client_doread(c);
+	if(rw)
+		client_dowrite(c);
 	return;
 }
 
@@ -94,9 +121,11 @@ Client *create_client_t(Listener *l)
 	new->set_parser = client_setparser;
 	new->set_packeter = client_setpacketer;
 
+	new->listener = l;
 	if(l) {
 		new->parser = l->parser;
 		new->packeter = l->packeter;
+		new->sockeng = l->sockeng;
 	} else {
 		new->parser = NULL;
 		new->packeter = NULL;

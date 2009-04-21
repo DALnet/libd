@@ -19,7 +19,6 @@ static void fd_assert(SockEng *s, myfd *fd)
 #endif
 }
 
-
 int mfd_add(SockEng *s, myfd *fd, void *owner, void (*cb)())
 {
 	if(s->local[fd->fd] != NULL)
@@ -45,14 +44,28 @@ void mfd_read(SockEng *s, myfd *fd)
 {
 	fd_assert(s, fd);
 	fd->state |= MFD_READ;
-	engine_change_fd_state(s, fd->fd, MFD_READ);
+	engine_change_fd_state(s, fd->fd, fd->state);
 }
 
 void mfd_write(SockEng *s, myfd *fd)
 {
 	fd_assert(s, fd);
 	fd->state |= MFD_WRITE;
-	engine_change_fd_state(s, fd->fd, MFD_WRITE);
+	engine_change_fd_state(s, fd->fd, fd->state);
+}
+
+void mfd_unwrite(SockEng *s, myfd *fd)
+{
+	fd_assert(s, fd);
+	fd->state &= ~MFD_WRITE;
+	engine_change_fd_state(s, fd->fd, fd->state);
+}
+
+void mfd_unread(SockEng *s, myfd *fd)
+{
+	fd_assert(s, fd);
+	fd->state &= ~MFD_READ;
+	engine_change_fd_state(s, fd->fd, fd->state);
 }
 
 void mfd_set_internal(SockEng *s, int fd, void *ptr)

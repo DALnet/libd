@@ -99,6 +99,7 @@ struct _client {
 	int		type;			/* the type of this connection (tcp/udp/raw) */
 
 	Listener	*listener;		/* listener this client came in on (optional) */
+	SockEng		*sockeng;		/* socket engine for this client */
 
 	/* functions */
 	int		(*send)();

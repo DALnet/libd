@@ -3,6 +3,7 @@
  */
 
 #include "sockeng.h"
+#include "ebuf.h"
 
 /* Maximum message length */
 #define MAX_MSGLEN 512
@@ -15,54 +16,6 @@
 /* Definitions */
 #define EBUF_LARGE_BUFFER	MAX_MSGLEN
 #define EBUF_SMALL_BUFFER	(MAX_MSGLEN / 2)
-
-/* Macros */
-#define eBufLength(s)		((s)->length)
-#define eBufClear(s)		ebuf_delete((s), (s)->length)
-
-/* forward declaration */
-typedef struct _eBuffer eBuffer;
-typedef struct _eBufUser eBufUser;
-typedef struct _eBuf eBuf;
-typedef struct _eBufBlock eBufBlock;
-typedef struct _eBufUserBlock eBufUserBlock;
-
-struct _eBuf
-{
-	int		length;
-	eBufUser	*head, *tail;
-};
-
-struct _eBuffer 
-{
-	eBuffer		*next;
-	int		shared;
-	int		bufsize;
-	int		refcount;
-	char		*end;
-};
-
-struct _eBufBlock
-{
-	int		num;
-	eBuffer		*bufs;
-	eBufBlock	*next;
-};
-
-struct _eBufUser
-{
-	char		*start;
-	eBuffer		*buf;
-	eBufUser	*next;
-};
-
-struct _eBufUserBlock
-{
-	int		num;
-	eBufUser	*users;
-	eBufUserBlock	*next;
-};
-
 
 typedef struct _eBufConfig {
 	eBuffer		*largeebuf_pool, *smallebuf_pool;
@@ -274,7 +227,7 @@ int ebuf_init()
  * we allocate an ebuffer with the data, and return it to the calling
  * function via ptr
  */
-int ebuf_begin_share(const char *buffer, int len, void **ptr)
+eBuffer *ebuf_begin_share(const char *buffer, int len)
 {
 	eBuffer *s;
 
@@ -282,23 +235,22 @@ int ebuf_begin_share(const char *buffer, int len, void **ptr)
 		len = MAX_MSGLEN;
 
 	s = ebuf_alloc(len);
-	if(!s || len > s->bufsize)
-		return ebuf_alloc_error();
+	if(!s || len > s->bufsize) {
+		ebuf_alloc_error();
+		return NULL;
+	}
 
 	memcpy(s->end, buffer, len);
 	s->end += len;
 	s->refcount = 0;
 	s->shared = 1;
 
-	*ptr = (void *) s;
-	return 0;
+	return s;
 }
 
 /* identify that this buffer has been associated to all references now */
-int ebuf_end_share(void *ptr)
+int ebuf_end_share(eBuffer *s)
 {
-	eBuffer *s = ptr;
-
 	s->shared = 0;
 	if(s->refcount == 0)
 		ebuf_free(s);
@@ -307,10 +259,9 @@ int ebuf_end_share(void *ptr)
 }
 
 /* associate a given shared buffer with a queue */
-int ebuf_put_share(eBuf *sb, void *ptr)
+int ebuf_put_share(eBuf *sb, eBuffer *s)
 {
 	eBufUser *user;
-	eBuffer  *s = ptr;
 
 	if(!s)
 		return -1;
@@ -331,7 +282,7 @@ int ebuf_put_share(eBuf *sb, void *ptr)
 }
 
 /* create and place a buffer in the correct user location */
-int ebuf_put(eBuf *sb, const char *buffer, int len)
+int ebuf_put(eBuf *sb, char *buffer, int len)
 {
 	eBufUser	**user, *u;
 	int		chunk;
@@ -381,6 +332,7 @@ int ebuf_put(eBuf *sb, const char *buffer, int len)
 	return 0;
 }
 
+/*
 int ebuf_putiov(eBuf *sb, struct iovec *v, int count)
 {
 	int i = 0, ret;
@@ -393,6 +345,7 @@ int ebuf_putiov(eBuf *sb, struct iovec *v, int count)
 	}
 	return 0;
 }
+*/
 
 int ebuf_delete(eBuf *sb, int len)
 {
@@ -486,31 +439,31 @@ int ebuf_flush(eBuf *sb)
 }
 */
 
+/* get an arbitrary length from the queue and put it in buffer */
 int ebuf_get(eBuf *sb, char *buffer, int len)
 {
 	eBufUser	*user;
-	int		copied;
+	int		copied = 0;
 	char		*ptr, *max;
 	
-	if(ebuf_flush(sb) == 0)
-		return 0;
-	
-	copied = 0;
 	for(user = sb->head; user && len; user = user->next) {
 		max = user->start + len; 
 		if(max > user->buf->end)
 			max = user->buf->end;
 		
-		for(ptr = user->start; ptr < max && !IsEol(*ptr); )
+		ptr = user->start;
+		while(ptr < max)
 			*buffer++ = *ptr++;
 			
 		copied += ptr - user->start;
 		len -= ptr - user->start;
 		
-		if(ptr < max) {
-			*buffer = 0;
+		if(!len) {
+			*buffer = 0;	/* null terminate.. */
+			/*
 			ebuf_delete(sb, copied);
 			ebuf_flush(sb);
+			*/
 			return copied;
 		}
 	}

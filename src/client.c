@@ -53,6 +53,16 @@ void client_do_rw(SockEng *s, Client *c, int rr, int rw)
 		if(pack_off) {
 			/* will enter into the parse queue later */
 			c->parser(c, pack_off);
+		} else {
+			/* no contained message, queue and check against older stuff */
+			if(ebuf_put(&c->recvQ, &readbuf, len))
+				return;
+			if(eBufLength(&c->recvQ) > len) {
+				len = ebuf_get(&c->recvQ, &readbuf, BUFSIZE);
+				pack_off = c->packeter(c, &readbuf, len);
+				if(pack_off)
+					c->parser(c, pack_off);
+			}
 		}
 	}
 	if(rw) {

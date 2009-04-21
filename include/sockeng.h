@@ -15,12 +15,11 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include "ebuf.h"
+
 #define WRITEV_IOV 32 /* FIXME future configured value */
-
 #define DEBUG
-
 #define MAX_FDS 1024		/* maximum supported file descriptors */
-
 #define BUFSIZE 8192
 
 /* typedefs make life easier */
@@ -93,6 +92,8 @@ struct _client {
 	ipvx		addr;			/* address of the client */
 	unsigned int	bufsize;		/* current size of the buffer */
 	char		buffer[BUFSIZE];	/* the buffer! */
+	eBuf		recvQ;			/* inbound queue */
+	eBuf		sendQ;			/* outbound queue */
 	int		sockerr;		/* any socket error is cached here */
 	unsigned short	port;			/* the remote port */
 	int		type;			/* the type of this connection (tcp/udp/raw) */

@@ -35,6 +35,7 @@ SockEng *init_sockeng()
 	new->set_errorhandler = set_errorhandler;
 
 	engine_init(new);
+	ebuf_init();
 
 	return new;
 }

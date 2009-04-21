@@ -208,7 +208,6 @@ static eBufUser *ebuf_user_alloc()
 
 static int ebuf_alloc_error()
 {
-	/* FIXME:  error reporting */
 	return -1;
 }
 

@@ -14,10 +14,15 @@ static int client_send(Client *c, char *msg, int len)
 	return 0;
 }
 
-static int client_close(Client *c)
+static void client_close(Client *c)
 {
-	printf("Closed client\n");
-	return 0;
+	/* clean up and close the client out */
+	ebuf_delete(&c->recvQ, eBufLength(&c->recvQ));
+	ebuf_delete(&c->sendQ, eBufLength(&c->sendQ));
+	mfd_del(&c->fdp);
+	close(c->fdp.fd);
+	free(c);
+	return;
 }
 
 static int client_qopts(Client *c, int qopts)
@@ -44,12 +49,36 @@ static int client_setpacketer(Client *c, char *(*func)())
 	return -1;
 }
 
+static int client_setonclose(Client *c, void (*func)())
+{
+	if(c) {
+		c->onclose = func;
+		return 0;
+	}
+	return -1;
+}
+
+/* unexpected shutdown - read or write error */
+static void client_shutdown(Client *c, int err)
+{
+	if(c->onclose)
+		c->onclose(c, err);
+	client_close(c);
+}
+
 static void client_doread(Client *c)
 {
 	static char readbuf[BUFSIZE];
 	int len, plen;
 
 	len = recv(c->fdp.fd, readbuf, sizeof(readbuf), 0);
+	if(len < 0) {
+		if(errno == EWOULDBLOCK || errno == EAGAIN)
+			return;
+		client_shutdown(c, errno);
+	}
+	if(len == 0)
+		return;
 	if(eBufLength(&c->recvQ) > 0) {
 		if(ebuf_put(&c->recvQ, &readbuf, len))
 			return;
@@ -120,6 +149,7 @@ Client *create_client_t(Listener *l)
 
 	new->set_parser = client_setparser;
 	new->set_packeter = client_setpacketer;
+	new->set_onclose = client_setonclose;
 
 	new->listener = l;
 	if(l) {

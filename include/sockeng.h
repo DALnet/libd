@@ -108,9 +108,11 @@ struct _client {
 
 	int		(*set_packeter)();
 	int		(*set_parser)();
+	int		(*set_onclose)();
 
 	int		(*packeter)(Client *, char *, int);
 	int		(*parser)(Client *, char *, int);
+	int		(*onclose)(Client *c, int);
 };
 
 /*
@@ -173,7 +175,7 @@ struct _sockeng {
 	Group		*(*create_group)();
 	int		(*poll)();
 	int		(*set_errorhandler)();
-	void		(*error)();
+	void		(*error)(int level, int errno, char *msg);
 };
 
 /* functions */

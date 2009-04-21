@@ -17,6 +17,12 @@ static int set_errorhandler(SockEng *s, void (*func)())
 	return -1;
 }
 
+void s_err(SockEng *s, int level, int err, char *msg)
+{
+	if(s->error)
+		s->error(level, err, msg);
+}
+
 SockEng *init_sockeng()
 {
 	SockEng *new;
@@ -27,6 +33,7 @@ SockEng *init_sockeng()
 	new->groups = NULL;
 	new->clients = NULL;
 	new->listeners = NULL;
+	new->error = NULL;
 
 	/* functions */
 	new->create_listener = create_listener;

@@ -42,7 +42,7 @@ static int client_setpacketer(Client *c, char *(*func)())
 
 void client_do_rw(SockEng *s, Client *c, int rr, int rw)
 {
-	static char readbuf[8192];
+	static char readbuf[BUFSIZE];
 	int len;
 	char *pack_off;
 

@@ -11,14 +11,17 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/uio.h>
 #include <errno.h>
 #include <unistd.h>
+
+#define WRITEV_IOV 32 /* FIXME future configured value */
 
 #define DEBUG
 
 #define MAX_FDS 1024		/* maximum supported file descriptors */
 
-#define BUFSIZE 4096
+#define BUFSIZE 8192
 
 /* typedefs make life easier */
 typedef struct _ipvx		ipvx;		/* ip abstraction */

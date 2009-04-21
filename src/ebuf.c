@@ -282,7 +282,7 @@ int ebuf_put_share(eBuf *sb, eBuffer *s)
 }
 
 /* create and place a buffer in the correct user location */
-int ebuf_put(eBuf *sb, char *buffer, int len)
+int ebuf_put(eBuf *sb, const char *buffer, int len)
 {
 	eBufUser	**user, *u;
 	int		chunk;
@@ -459,7 +459,7 @@ int ebuf_get(eBuf *sb, char *buffer, int len)
 		len -= ptr - user->start;
 		
 		if(!len) {
-			*buffer = 0;	/* null terminate.. */
+			*buffer = 0;
 			/*
 			ebuf_delete(sb, copied);
 			ebuf_flush(sb);

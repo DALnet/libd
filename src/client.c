@@ -43,26 +43,23 @@ static int client_setpacketer(Client *c, char *(*func)())
 void client_do_rw(SockEng *s, Client *c, int rr, int rw)
 {
 	static char readbuf[BUFSIZE];
-	int len;
-	char *pack_off;
+	int len, plen;
 
 	if(rr) {
-		printf("got read request on fd %d\n", c->fdp.fd);
 		len = recv(c->fdp.fd, readbuf, sizeof(readbuf), 0);
-		pack_off = c->packeter(c, &readbuf, len);
-		if(pack_off) {
-			/* will enter into the parse queue later */
-			c->parser(c, pack_off);
-		} else {
-			/* no contained message, queue and check against older stuff */
+		if(eBufLength(&c->recvQ) > 0) {
 			if(ebuf_put(&c->recvQ, &readbuf, len))
 				return;
-			if(eBufLength(&c->recvQ) > len) {
-				len = ebuf_get(&c->recvQ, &readbuf, BUFSIZE);
-				pack_off = c->packeter(c, &readbuf, len);
-				if(pack_off)
-					c->parser(c, pack_off);
-			}
+			len = ebuf_get(&c->recvQ, &readbuf, BUFSIZE);
+			plen = c->packeter(c, &readbuf, len);
+			if(plen)
+				c->parser(c, &readbuf, plen);
+		} else {
+			plen = c->packeter(c, &readbuf, len);
+			if(plen)
+				c->parser(c, &readbuf, plen);
+			else if(ebuf_put(&c->recvQ, &readbuf, len))
+				return;
 		}
 	}
 	if(rw) {

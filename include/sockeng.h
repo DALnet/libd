@@ -108,8 +108,8 @@ struct _client {
 	int		(*set_packeter)();
 	int		(*set_parser)();
 
-	char		*(*packeter)();
-	int		(*parser)();
+	int		(*packeter)(Client *, char *, int);
+	int		(*parser)(Client *, char *, int);
 };
 
 /*
@@ -132,9 +132,9 @@ struct _listener {
 	int		(*set_onconnect)();	/* function to set the onconnect handler */
 
 
-	char		*(*packeter)();		/* the packeter */
-	int		(*parser)();		/* the parser */
-	int		(*onconnect)(Client *c); /* on-connect client handler */
+	int		(*packeter)(Client *, char *, int);		/* the packeter */
+	int		(*parser)(Client *, char *, int);		/* the parser */
+	int		(*onconnect)(Client *c); 			/* on-connect client handler */
 };
 
 
@@ -174,5 +174,8 @@ struct _sockeng {
 	int		(*set_errorhandler)();
 	void		(*error)();
 };
+
+/* functions */
+extern SockEng *init_sockeng();
 
 #endif

@@ -101,17 +101,32 @@ static int destroy_group(Group *g)
 	return 0;
 }
 
+static int sendto_group_butone(Group *g, Client *c, char *msg, int len)
+{
+	cLink *tmp;
+	Client *this;
+	eBuffer *buffer;
+
+	tmp = g->clients;
+	buffer = ebuf_begin_share(msg, len);
+	if(!buffer)
+		return -1;
+	while(tmp) {
+		this = tmp->cl;
+		if(this == c)
+			continue;
+		ebuf_put_share(&this->sendQ, buffer);
+		mfd_write(this->sockeng, &this->fdp);
+		tmp = tmp->prev;
+	}
+	ebuf_end_share(buffer);
+	return 0;
+}
+
 /* send a message to all clients in a group */
 static int sendto_group(Group *g, char *msg, int len)
 {
-	cLink *tmp;
-
-	tmp = g->clients;
-	while(tmp) {
-		tmp->cl->send(tmp->cl, msg, len);
-		tmp = tmp->prev;
-	}
-	return 0;
+	return sendto_group_butone(g, NULL, msg, len);
 }
 
 /* iniitialize a group */
@@ -135,6 +150,7 @@ static Group *create_group_t()
 	new->destroy = destroy_group;
 
 	new->send = sendto_group;
+	new->send_butone = sendto_group_butone;
 
 	return new;
 }

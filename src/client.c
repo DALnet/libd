@@ -19,7 +19,7 @@ static void client_close(Client *c)
 	/* clean up and close the client out */
 	ebuf_delete(&c->recvQ, eBufLength(&c->recvQ));
 	ebuf_delete(&c->sendQ, eBufLength(&c->sendQ));
-	mfd_del(&c->fdp);
+	mfd_del(c->sockeng, &c->fdp);
 	close(c->fdp.fd);
 	free(c);
 	return;

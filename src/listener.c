@@ -45,6 +45,15 @@ static int listener_setonconnect(Listener *l, int (*func)())
 	return -1;
 }
 
+static int listener_setonclose(Listener *l, void (*func)())
+{
+	if(l) {
+		l->onclose = func;
+		return 0;
+	}
+	return -1;
+}
+
 static int listener_setsockopts(myfd fdp)
 {
 	int opt, ret;
@@ -252,6 +261,7 @@ Listener *create_listener(SockEng *s, unsigned short port, ipvx *address)
 	new->set_packeter = listener_setpacketer;
 	new->set_parser = listener_setparser;
 	new->set_onconnect = listener_setonconnect;
+	new->set_onclose = listener_setonclose;
 
 	/* FIXME:  egg problem possible here.. must fix */
 	new->packeter = NULL;

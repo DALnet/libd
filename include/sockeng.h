@@ -133,11 +133,13 @@ struct _listener {
 	int		(*set_packeter)();	/* function to set packeter */
 	int		(*set_parser)();	/* function to set parser */
 	int		(*set_onconnect)();	/* function to set the onconnect handler */
+	int		(*set_onclose)();	/* function to set the onclose hanlder */
 
 
 	int		(*packeter)(Client *, char *, int);		/* the packeter */
 	int		(*parser)(Client *, char *, int);		/* the parser */
 	int		(*onconnect)(Client *c); 			/* on-connect client handler */
+	void		(*onclose)(Client *c, int err);			/* on-close client handler */
 };
 
 
@@ -156,7 +158,8 @@ struct _group {
 	Group		*(*create_subgroup)(Group *gr);		/* function to create a subgroup */
 	int		(*destroy)(Group *gr);			/* destroy this group and its subgroups */
 
-	int		(*send)();				/* send a message to this group */
+	int		(*send)(Group *, char *, int);			/* send a message to this group */
+	int		(*send_butone)(Group *, Client *, char *, int); /* send a message to all but one */
 };
 
 /*

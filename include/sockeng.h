@@ -22,6 +22,18 @@
 #define MAX_FDS 1024		/* maximum supported file descriptors */
 #define BUFSIZE 8192
 
+/* threadsafe atomics for interacting with memory less than 8 bytes (long long) */
+#define atomic_add(x, y) ((void) __sync_fetch_and_add(&(x), y))
+#define atomic_sub(x, y) ((void) __sync_fetch_and_add(&(x), -(y)))
+#define atomic_incr(x)   ((void) __sync_fetch_and_add(&(x), 1))
+#define atomic_deincr(x) ((void) __sync_fetch_and_add(&(x), -1))
+
+/* debug levels */
+#define DL_DEBUG 0x01
+#define DL_INFO  0x02
+#define DL_WARN  0x04
+#define DL_CRIT  0x08
+
 /* typedefs make life easier */
 typedef struct _ipvx		ipvx;		/* ip abstraction */
 typedef struct _client 		Client;		/* a Client */
@@ -170,6 +182,7 @@ struct _sockeng {
 	gLink		*groups;
 	cLink		*clients;
 	lLink		*listeners;
+	int		loglev;
 
 	myfd		*local[MAX_FDS];
 
@@ -178,7 +191,7 @@ struct _sockeng {
 	Group		*(*create_group)();
 	int		(*poll)();
 	int		(*set_errorhandler)();
-	void		(*error)(int level, int errno, char *msg);
+	void		(*error)(int errno, char *msg);
 };
 
 /* functions */

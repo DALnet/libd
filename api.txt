@@ -3,61 +3,70 @@ Socket API
 ----------
 
 
-SOCK = init_socketengine():
+SockEng = init_socketengine():
 	creates the socket engine handle
 
-LISTEN = SOCK->create_listener():
+Listener = SockEng->create_listener():
 	Called with listener details and a callback function
-	The callback function will provide a CLIENT structure
+	The callback function will provide a Client structure
 
-LISTEN->qopts():
+Listener->qopts():
 	Sets the listener queuing options
 
-LISTEN->set_packeter():
-	Sets the message delination parser (identifies the end of messages).
+Listener->set_packeter():
+	Sets the default message deliniator for clients accepted on this listener
 
-LISTEN->set_parser():
-	Sets the message parser for a listener
+Listener->set_parser():
+	Sets the default message parser for clients accepted on this listener
 
-SOCK->poll():
+Listener->set_onconnect():
+	Sets the on-connect handler for clients accepted by this listener
+
+Listener->set_onclose():
+	Sets the default onclose handler for clients accepted on this listener
+
+SockEng->poll():
 	Will do a socket wait call..
 
-CLIENT->send():
+Client->send():
 	Enqueue information to send to the client
 
-CLIENT->close():
+Client->close():
 	Close and destroy the client connection
 
-CLIENT->qopts():
+Client->qopts():
 	Set client queuing options
 
-GROUP = SOCK->create_group():
+Group = SockEng->create_group():
 	Creates a group to which clients can be associated
 
-GROUP->add():
+Group->add():
 	Add a client to a group
 
-GROUP->remove():
+Group->remove():
 	Remove a client from a group
 
-GROUP->destroy():
+Group->destroy():
 	Destroy a group.
 
-GROUP = GROUP->create_subgroup():
+Group = Group->create_subgroup():
 	Create a group owned by a higher level group.
 
-GROUP->send():
+Group->send():
 	Send a message to a group.
+
+Group->send_butone():
+	Send a message to a group except one client.
 
 
 Function requirements:
 
-Listener Callback:
+Listenerer Callback:
 	- Acts as an on-connect hook function.  Optional.
 
 Packeter:
-	- Recieves a packet buffer from a client and returns
-	  a pointer to the end of a specific parsable message.
+	- Recieves a buffer from a client and returns the length to the
+	  end of a single message (to be passed to the parser).
 
 Parser:
 	- Recieves a message buffer, start and end pointers to the message

@@ -1,0 +1,18 @@
+CC = @CC@
+RM = @RM@
+INCLUDES = -I../include
+CFLAGS = @CFLAGS@
+
+SOURCES = client.c sockeng.c group.c listener.c mfd.c test.c engine.c ebuf.c
+
+OBJECTS = $(SOURCES:.c=.o)
+
+.c.o:
+	$(CC) $(CFLAGS) $(INCLUDES) -c $<
+
+build: $(OBJECTS)
+	$(CC) $(CFLAGS) -o test $(OBJECTS)
+
+clean:
+	$(RM) -f $(OBJECTS) test
+

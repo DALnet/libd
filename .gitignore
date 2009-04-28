@@ -1,2 +1,7 @@
 #
 *.o
+autom4te.cache
+config.log
+config.status
+include/setup.h
+include/setup.h.in~

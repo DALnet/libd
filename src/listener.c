@@ -11,14 +11,15 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
-extern void client_do_rw(SockEng *s, Client *c, int rr, int rw);
+extern void client_do_rw(SockEng *s, void *c, int rr, int rw);
+extern Client *create_client_t(Listener *);
 
 static int listener_qopts(Listener *l, int opts)
 {
 	return 0;
 }
 
-static int listener_setpacketer(Listener *l, char *(*func)())
+static int listener_setpacketer(Listener *l, int (*func)(Client *, char *, int))
 {
 	if(l) {
 		l->packeter = func;
@@ -27,7 +28,7 @@ static int listener_setpacketer(Listener *l, char *(*func)())
 	return -1;
 }
 
-static int listener_setparser(Listener *l, int (*func)())
+static int listener_setparser(Listener *l, int (*func)(Client *, char *, int))
 {
 	if(l) {
 		l->parser = func;
@@ -36,7 +37,7 @@ static int listener_setparser(Listener *l, int (*func)())
 	return -1;
 }
 
-static int listener_setonconnect(Listener *l, int (*func)())
+static int listener_setonconnect(Listener *l, int (*func)(Client *))
 {
 	if(l) {
 		l->onconnect = func;
@@ -45,7 +46,7 @@ static int listener_setonconnect(Listener *l, int (*func)())
 	return -1;
 }
 
-static int listener_setonclose(Listener *l, void (*func)())
+static int listener_setonclose(Listener *l, void (*func)(Client *, int))
 {
 	if(l) {
 		l->onclose = func;
@@ -99,8 +100,9 @@ static int listener_listen(myfd fdp)
 	return 0;
 }
 
-static void accept_tcp6_connect(SockEng *s, Listener *l, int rr, int rw)
+static void accept_tcp6_connect(SockEng *s, void *in, int rr, int rw)
 {
+	Listener *l = in;
 	int i, newfd;
 	struct sockaddr_in6 addr;
 	unsigned int addrlen = sizeof(struct sockaddr_in6);
@@ -127,8 +129,9 @@ static void accept_tcp6_connect(SockEng *s, Listener *l, int rr, int rw)
 	}
 }
 
-static void accept_tcp4_connect(SockEng *s, Listener *l, int rr, int rw)
+static void accept_tcp4_connect(SockEng *s, void *in, int rr, int rw)
 {
+	Listener *l = in;
 	int i, newfd;
 	struct sockaddr_in addr;
 	unsigned int addrlen = sizeof(struct sockaddr_in);

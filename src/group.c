@@ -3,6 +3,7 @@
  */
 
 #include "sockeng.h"
+#include "mfd.h"
 
 /* forward declarations */
 Group *create_supergroup(SockEng *s);
@@ -130,7 +131,7 @@ static int sendto_group(Group *g, char *msg, int len)
 }
 
 /* iniitialize a group */
-static Group *create_group_t()
+static Group *create_group_t(void)
 {
 	Group *new;
 

@@ -14,7 +14,7 @@ static int client_send(Client *c, char *msg, int len)
 	return 0;
 }
 
-static void client_close(Client *c)
+static int client_close(Client *c)
 {
 	/* clean up and close the client out */
 	ebuf_delete(&c->recvQ, eBufLength(&c->recvQ));
@@ -22,7 +22,7 @@ static void client_close(Client *c)
 	mfd_del(c->sockeng, &c->fdp);
 	close(c->fdp.fd);
 	free(c);
-	return;
+	return 0;
 }
 
 static int client_qopts(Client *c, int qopts)
@@ -31,7 +31,7 @@ static int client_qopts(Client *c, int qopts)
 	return 0;
 }
 
-static int client_setparser(Client *c, int (*func)())
+static int client_setparser(Client *c, int (*func)(Client *, char *, int))
 {
 	if(c) {
 		c->parser = func;
@@ -40,7 +40,7 @@ static int client_setparser(Client *c, int (*func)())
 	return -1;
 }
 
-static int client_setpacketer(Client *c, char *(*func)())
+static int client_setpacketer(Client *c, int (*func)(Client *, char *, int))
 {
 	if(c) {
 		c->packeter = func;
@@ -49,7 +49,7 @@ static int client_setpacketer(Client *c, char *(*func)())
 	return -1;
 }
 
-static int client_setonclose(Client *c, void (*func)())
+static int client_setonclose(Client *c, void (*func)(Client *, int))
 {
 	if(c) {
 		c->onclose = func;
@@ -80,19 +80,19 @@ static void client_doread(Client *c)
 	if(len == 0)
 		return;
 	if(eBufLength(&c->recvQ) > 0) {
-		if(ebuf_put(&c->recvQ, &readbuf, len))
+		if(ebuf_put(&c->recvQ, readbuf, len))
 			return;
-		len = ebuf_get(&c->recvQ, &readbuf, BUFSIZE);
-		plen = c->packeter(c, &readbuf, len);
+		len = ebuf_get(&c->recvQ, readbuf, BUFSIZE);
+		plen = c->packeter(c, readbuf, len);
 		if(plen) {
-			c->parser(c, &readbuf, plen);
+			c->parser(c, readbuf, plen);
 			ebuf_delete(&c->recvQ, plen);
 		}
 	} else {
-		plen = c->packeter(c, &readbuf, len);
+		plen = c->packeter(c, readbuf, len);
 		if(plen)
-			c->parser(c, &readbuf, plen);
-		else if(ebuf_put(&c->recvQ, &readbuf, len))
+			c->parser(c, readbuf, plen);
+		else if(ebuf_put(&c->recvQ, readbuf, len))
 			return;
 	}
 	return;
@@ -116,8 +116,9 @@ static void client_dowrite(Client *c)
 	return;
 }
 
-void client_do_rw(SockEng *s, Client *c, int rr, int rw)
+void client_do_rw(SockEng *s, void *in, int rr, int rw)
 {
+	Client *c = in;
 	if(rr)
 		client_doread(c);
 	if(rw)
@@ -164,7 +165,7 @@ Client *create_client_t(Listener *l)
 	return new;
 }
 
-Client *create_client()
+Client *create_client(void)
 {
 	return create_client_t(NULL);
 }

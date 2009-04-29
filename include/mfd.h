@@ -5,7 +5,7 @@
 #ifndef MDF_H
 #define MDF_H
 
-extern int mfd_add(SockEng *s, myfd *fd, void *owner, void (*cb)());
+extern int mfd_add(SockEng *s, myfd *fd, void *owner, void (*cb)(SockEng *, void *, int, int));
 extern void mfd_del(SockEng *s, myfd *fd);
 extern void mfd_read(SockEng *s, myfd *fd);
 extern void mfd_unread(SockEng *s, myfd *fd);

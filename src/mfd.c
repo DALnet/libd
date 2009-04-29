@@ -19,7 +19,7 @@ static void fd_assert(SockEng *s, myfd *fd)
 #endif
 }
 
-int mfd_add(SockEng *s, myfd *fd, void *owner, void (*cb)())
+int mfd_add(SockEng *s, myfd *fd, void *owner, void (*cb)(SockEng *, void *, int, int))
 {
 	if(s->local[fd->fd] != NULL)
 		return -1;

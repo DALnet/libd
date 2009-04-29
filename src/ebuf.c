@@ -185,7 +185,7 @@ static eBuffer *ebuf_alloc(int size)
 	}
 }
 
-static eBufUser *ebuf_user_alloc()
+static eBufUser *ebuf_user_alloc(void)
 {
 	eBufUser *user;
 	
@@ -206,14 +206,14 @@ static eBufUser *ebuf_user_alloc()
 	return user;
 }
 
-static int ebuf_alloc_error()
+static int ebuf_alloc_error(void)
 {
 	return -1;
 }
 
 /* Global functions */
 
-int ebuf_init()
+int ebuf_init(void)
 {
 	memset(&sbc, 0, sizeof(eBufConfig));
 	ebuf_allocblock_small(INITIAL_EBUFS_SMALL);

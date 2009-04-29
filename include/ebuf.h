@@ -51,7 +51,7 @@ struct _eBufUserBlock
 };
 
 /* functions */
-extern int ebuf_init();
+extern int ebuf_init(void);
 extern eBuffer *ebuf_begin_share(const char *buffer, int len);
 extern int ebuf_end_share(eBuffer *s);
 extern int ebuf_put_share(eBuf *sb, eBuffer *s);

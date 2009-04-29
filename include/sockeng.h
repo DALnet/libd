@@ -15,11 +15,11 @@
 #include <errno.h>
 #include <unistd.h>
 
+#include "setup.h"
 #include "ebuf.h"
 
-#define WRITEV_IOV 32 /* FIXME future configured value */
+#define MAX_FDS MAXCONNECTIONS
 #define DEBUG
-#define MAX_FDS 1024		/* maximum supported file descriptors */
 #define BUFSIZE 8192
 
 /* threadsafe atomics for interacting with memory less than 8 bytes (long long) */
@@ -92,7 +92,7 @@ struct _mfd {
 	int		fd;
 	int		state;
 	void		*owner;
-	void		(*cb)();
+	void		(*cb)(SockEng *, void *, int, int);
 	void		*internal;
 };
 
@@ -114,17 +114,17 @@ struct _client {
 	SockEng		*sockeng;		/* socket engine for this client */
 
 	/* functions */
-	int		(*send)();
-	int		(*close)();
-	int		(*qopts)();
+	int		(*send)(Client *, char *, int);
+	int		(*close)(Client *);
+	int		(*qopts)(Client *, int);
 
-	int		(*set_packeter)();
-	int		(*set_parser)();
-	int		(*set_onclose)();
+	int		(*set_packeter)(Client *, int (*)(Client *, char *, int));
+	int		(*set_parser)(Client *, int (*)(Client *, char *, int));
+	int		(*set_onclose)(Client *, void (*)(Client *, int));
 
 	int		(*packeter)(Client *, char *, int);
 	int		(*parser)(Client *, char *, int);
-	int		(*onclose)(Client *c, int);
+	void		(*onclose)(Client *, int);
 };
 
 /*
@@ -141,17 +141,17 @@ struct _listener {
 
 	int		flags;		/* flags? */
 
-	int		(*qopts)();		/* function to set options */
-	int		(*set_packeter)();	/* function to set packeter */
-	int		(*set_parser)();	/* function to set parser */
-	int		(*set_onconnect)();	/* function to set the onconnect handler */
-	int		(*set_onclose)();	/* function to set the onclose hanlder */
+	/* function prototypes */
+	int		(*qopts)(Listener *, int);
+	int		(*set_packeter)(Listener *, int (*)(Client *, char *, int));
+	int		(*set_parser)(Listener *, int (*)(Client *, char *, int));
+	int		(*set_onconnect)(Listener *, int (*)(Client *));
+	int		(*set_onclose)(Listener *, void (*)(Client *, int));
 
-
-	int		(*packeter)(Client *, char *, int);		/* the packeter */
-	int		(*parser)(Client *, char *, int);		/* the parser */
-	int		(*onconnect)(Client *c); 			/* on-connect client handler */
-	void		(*onclose)(Client *c, int err);			/* on-close client handler */
+	int		(*packeter)(Client *, char *, int);
+	int		(*parser)(Client *, char *, int);
+	int		(*onconnect)(Client *c);
+	void		(*onclose)(Client *c, int err);
 };
 
 
@@ -187,14 +187,14 @@ struct _sockeng {
 	myfd		*local[MAX_FDS];
 
 	/* functions */
-	Listener	*(*create_listener)();
-	Group		*(*create_group)();
-	int		(*poll)();
-	int		(*set_errorhandler)();
-	void		(*error)(int errno, char *msg);
+	Listener	*(*create_listener)(SockEng *, unsigned short, ipvx *);
+	Group		*(*create_group)(SockEng *);
+	int		(*poll)(SockEng *, time_t);
+	int		(*set_errorhandler)(SockEng *, int, void (*)(int, char *));
+	void		(*error)(int, char *);
 };
 
 /* functions */
-extern SockEng *init_sockeng();
+extern SockEng *init_sockeng(void);
 
 #endif

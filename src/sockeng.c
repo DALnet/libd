@@ -7,10 +7,10 @@
 #include "sockeng.h"
 #include "engine.h"
 
-extern Group *create_supergroup(SockEng *s);
-extern Listener *create_listener(SockEng *s);
+extern Group *create_supergroup(SockEng *);
+extern Listener *create_listener(SockEng *, unsigned short, ipvx *);
 
-static int set_errorhandler(SockEng *s, int level, void (*func)())
+static int set_errorhandler(SockEng *s, int level, void (*func)(int, char *))
 {
 	if(!s)
 		return -1;

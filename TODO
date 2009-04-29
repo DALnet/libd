@@ -1,0 +1,28 @@
+TODO LIST
+---------
+
+Groups:
+	I'm having second thoughts about the supergroup/subgroup structure I originally built.
+	Review, and possible remove the supergroup/subgroup functionality, leaving that to the
+	application to manage.
+
+Threading:
+	- Implement threading!  Discussion ongoing - current ideas focus around...
+	- Accept thread
+	- poll/read/parse thread pool assigned sockets from accept thread
+	- write thread to handle blocked sockets that cannot be written to immiedately (?)
+	- event timer thread and interfaces to go with it
+
+Socket Handling:
+	- SSL support, possibly encrypting prior to buffering in order to maintain vectored writes
+	- Compression support via zlib
+	- UDP socket support
+
+Error Handling:
+	- The error handling and logging facilities need to be improved and properly implemented
+
+Time Syncronization:
+	- Possibly in concert with the event threading system, time sync items need to be addressed
+
+
+Other than that, look up some FIXME's in the code, there are a bunch of them!

@@ -176,9 +176,6 @@ int engine_read_message(SockEng *s, time_t delay)
 	static struct kevent events[ENGINE_MAX_EVENTS];
 
 	int nevs, length, i, numloops, eventsfull;
-	unsigned int fdflags;
-	int fdtype;
-	void *fdvalue;
 	struct timespec wait;
 
 	numloops = 0;

@@ -29,8 +29,10 @@ static void kevent_add(struct kevent *e)
 
 	if(numEvents >= MAX_EVENT_QUEUE)
 	{
-		if(kevent(kqueue_id, eventQ, numEvents, NULL, 0, NULL) < 0)
-			sendto_realops_lev(DEBUG_LEV, "kevent() returned error: %s", strerror(errno));
+		if(kevent(kqueue_id, eventQ, numEvents, NULL, 0, NULL) < 0) {
+			/* FIXME: error handling */
+			;
+		}
 		numEvents = 0;
 	}
 	memcpy(&eventQ[numEvents++], e, sizeof(struct kevent));

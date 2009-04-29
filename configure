@@ -9149,7 +9149,17 @@ echo "$as_me: error: either specify a valid zlib installation with --with-zlib=D
 fi
 
 if test "$engine" = "select" && test "$broken_fd_setsize" != "yes"; then
-    CFLAGS="$CFLAGS -DFD_SETSIZE=$maxconnections"
+	CFLAGS="$CFLAGS -DUSE_SELECT -DFD_SETSIZE=$maxconnections"
+elif test "$engine" = "select"; then
+	CFLAGS="$CFLAGS -DUSE_SELECT"
+elif test "$engine" = "poll"; then
+	CFLAGS="$CFLAGS -DUSE_POLL"
+elif test "$engine" = "epoll"; then
+	CFLAGS="$CFLAGS -DUSE_EPOLL"
+elif test "$engine" = "kqueue"; then
+	CFLAGS="$CFLAGS -DUSE_KQUEUE"
+elif test "$engine" = "devpoll"; then
+	CFLAGS="$CFLAGS -DUSE_DEVPOLL"
 fi
 
 INSTALL_DIR="${prefix}"

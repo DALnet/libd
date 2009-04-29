@@ -146,7 +146,7 @@ void engine_change_fd_state(SockEng *s, int fd, unsigned int stateplus)
 	{
 		e.ident = fd;
 		e.filter = EVFILT_READ;
-		e.flags = EV_ADD|((stateplus & FDF_WANTREAD) ? EV_ENABLE : EV_DISABLE);
+		e.flags = EV_ADD|((stateplus & MFD_READ) ? EV_ENABLE : EV_DISABLE);
 		e.fflags = 0;
 		e.data = 0;
 		e.udata = 0;
@@ -158,7 +158,7 @@ void engine_change_fd_state(SockEng *s, int fd, unsigned int stateplus)
 	{
 		e.ident = fd;
 		e.filter = EVFILT_WRITE;
-		e.flags = EV_ADD|((stateplus & FDF_WANTWRITE) ? EV_ENABLE : EV_DISABLE);
+		e.flags = EV_ADD|((stateplus & MFD_WRITE) ? EV_ENABLE : EV_DISABLE);
 		e.fflags = 0;
 		e.data = 0;
 		e.udata = 0;

@@ -197,15 +197,18 @@ int engine_read_message(SockEng *s, time_t delay)
 		{
 			if((errno == EINTR) || (errno == EAGAIN))
 				return -1;
-
+			/* FIXME:  error reporting
 			report_error("kevent %s:%s", &me);
+			*/
 			sleep(5);
 			return -1;
 		}
 
 		eventsfull = (nevs == ENGINE_MAX_EVENTS) ? 1 : 0;
+		/* FIXME: time sync
 		if(delay || numloops)
 			NOW = timeofday = time(NULL);
+		*/
 		numloops++;
 	  
 		for(i = 0; i < nevs; i++)

@@ -37,6 +37,8 @@ AC_ARG_WITH(maxconnections,
 [ check_maxconnections=$withval ],
 [ check_maxconnections="auto" ])
 
+DEBUG=yes
+
 dnl
 dnl load custom checks
 
@@ -51,14 +53,12 @@ builtin(include, ./m4/ax_cc_maxopt.m4)
 dnl end custom checks load
 dnl
 
-export DEBUG="yes"
-
 dnl Checks!
 AC_PROG_CC_C99
-AC_CANONICAL_SYSTEM
 AX_CC_MAXOPT
-AX_CFLAGS_WARN_ALL_ANSI
 AX_CFLAGS_STRICT_PROTOTYPES
+AC_CANONICAL_SYSTEM
+AX_CFLAGS_WARN_ALL_ANSI
 AC_ISC_POSIX
 AC_PROG_MAKE_SET
 AC_PATH_PROG(RM, rm)

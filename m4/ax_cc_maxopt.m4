@@ -136,9 +136,9 @@ if test "$ac_test_CFLAGS" != "set"; then
 
     gnu)
      # adding an exception for debugging turned on...
-     if test "x$DEBUG" = "xyes"; then
+     if test "x$DEBUG" = xyes; then
        CFLAGS="-g -O0"
-     elsif
+     else
        CFLAGS="-g -O3 -fomit-frame-pointer"
      fi
 

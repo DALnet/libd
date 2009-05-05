@@ -16,43 +16,43 @@ extern Client *create_client_t(Listener *);
 
 static int listener_qopts(Listener *l, int opts)
 {
-	return 0;
+	return RET_OK;
 }
 
 static int listener_setpacketer(Listener *l, int (*func)(Client *, char *, int))
 {
-	if(l) {
+	if(l && func) {
 		l->packeter = func;
-		return 0;
+		return RET_OK;
 	}
-	return -1;
+	return RET_INVAL;
 }
 
 static int listener_setparser(Listener *l, int (*func)(Client *, char *, int))
 {
-	if(l) {
+	if(l && func) {
 		l->parser = func;
-		return 0;
+		return RET_OK;
 	}
-	return -1;
+	return RET_INVAL;
 }
 
 static int listener_setonconnect(Listener *l, int (*func)(Client *))
 {
-	if(l) {
+	if(l && func) {
 		l->onconnect = func;
-		return 0;
+		return RET_OK;
 	}
-	return -1;
+	return RET_INVAL;
 }
 
 static int listener_setonclose(Listener *l, void (*func)(Client *, int))
 {
-	if(l) {
+	if(l && func) {
 		l->onclose = func;
-		return 0;
+		return RET_OK;
 	}
-	return -1;
+	return RET_INVAL;
 }
 
 static int listener_setsockopts(myfd fdp)
@@ -233,16 +233,16 @@ out_err:
 	return -1;
 }
 
-Listener *create_listener(SockEng *s, unsigned short port, ipvx *address)
+int create_listener(SockEng *s, unsigned short port, ipvx *address, Listener **l)
 {
 	Listener *new;
 
 	if(!s)
-		return NULL;
+		return RET_INVAL;
 
 	new = malloc(sizeof(Listener));
 	if(!new)
-		return NULL;
+		return RET_NOMEM;
 
 	/* data */
 
@@ -273,12 +273,14 @@ Listener *create_listener(SockEng *s, unsigned short port, ipvx *address)
 	if(address && address->type == TYPE_IPV6) {
 		if(create_tcp6_listener(new)) {
 			free(new);
-			return NULL;
+			return RET_INVAL;
 		}
 	} else if(create_tcp4_listener(new)) {
 		free(new);
-		return NULL;
+		return RET_INVAL;
 	}
 
-	return new;
+	*l = new;
+
+	return RET_OK;
 }

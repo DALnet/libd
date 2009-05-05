@@ -9,9 +9,9 @@ static int client_send(Client *c, char *msg, int len)
 {
 	/* buffer it up for sending .. */
 	if(ebuf_put(&c->sendQ, msg, len))
-		return -1;
+		return RET_NOMEM;
 	mfd_write(c->sockeng, &c->fdp);
-	return 0;
+	return RET_OK;
 }
 
 static int client_close(Client *c)
@@ -22,40 +22,40 @@ static int client_close(Client *c)
 	mfd_del(c->sockeng, &c->fdp);
 	close(c->fdp.fd);
 	free(c);
-	return 0;
+	return RET_OK;
 }
 
 static int client_qopts(Client *c, int qopts)
 {
 	printf("Client qopts %d\n", qopts);
-	return 0;
+	return RET_OK;
 }
 
 static int client_setparser(Client *c, int (*func)(Client *, char *, int))
 {
-	if(c) {
+	if(c && func) {
 		c->parser = func;
-		return 0;
+		return RET_OK;
 	}
-	return -1;
+	return RET_INVAL;
 }
 
 static int client_setpacketer(Client *c, int (*func)(Client *, char *, int))
 {
-	if(c) {
+	if(c && func) {
 		c->packeter = func;
-		return 0;
+		return RET_OK;
 	}
-	return -1;
+	return RET_INVAL;
 }
 
 static int client_setonclose(Client *c, void (*func)(Client *, int))
 {
-	if(c) {
+	if(c && func) {
 		c->onclose = func;
-		return 0;
+		return RET_OK;
 	}
-	return -1;
+	return RET_INVAL;
 }
 
 /* unexpected shutdown - read or write error */

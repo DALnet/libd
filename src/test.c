@@ -33,9 +33,9 @@ int main(int argc, char *argv[])
 	SockEng *s;
 	Listener *l1;
 
-	s = init_sockeng();
-	l1 = s->create_listener(s, 1111, NULL);
-	if(!l1) {
+	if(init_sockeng(&s))
+		return -1;
+	 if(s->create_listener(s, 1111, NULL, &l1)) {
 		printf("no listener create\n");
 		return -1;
 	} else {

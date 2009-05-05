@@ -6,7 +6,7 @@
 #include "mfd.h"
 
 /* forward declarations */
-Group *create_supergroup(SockEng *s);
+int create_supergroup(SockEng *s, Group **);
 static Group *create_subgroup(Group *g);
 
 /* add a client to a group */
@@ -16,7 +16,7 @@ static int addto_group(Group *g, Client *c)
 
 	link = malloc(sizeof(cLink));
 	if(!link)
-		return -1;
+		return RET_NOMEM;
 
 	link->cl = c;
 	link->flags = 0;
@@ -32,7 +32,7 @@ static int addto_group(Group *g, Client *c)
 		g->clients->next = link;
 		g->clients = link;
 	}
-	return 0;
+	return RET_OK;
 }
 
 /* remove a client from a group */
@@ -47,7 +47,7 @@ static int removefrom_group(Group *g, Client *c)
 		tmp = tmp->prev;
 	}
 	if(!tmp)
-		return -1;
+		return RET_NOSUCH;
 	if(tmp->next)
 		tmp->next->prev = tmp->prev;
 	if(tmp->prev)
@@ -62,7 +62,7 @@ static int removefrom_group(Group *g, Client *c)
 		}
 	}
 	free(tmp);
-	return 0;
+	return RET_OK;
 }
 
 /* destroy a group - only when empty */
@@ -71,9 +71,9 @@ static int destroy_group(Group *g)
 	gLink *tmp, *tmp2;
 
 	if(g->groups)
-		return -1;
+		return RET_EXISTS;
 	if(g->clients)
-		return -1;
+		return RET_EXISTS;
 	if(g->parent) {
 		tmp = g->parent->groups;
 		while(tmp) {
@@ -82,7 +82,7 @@ static int destroy_group(Group *g)
 			tmp = tmp->prev;
 		}
 		if(!tmp)
-			return -1;
+			return RET_NOSUCH;
 		if(tmp->next)
 			tmp->next->prev = tmp->prev;
 		if(tmp->prev)
@@ -99,7 +99,7 @@ static int destroy_group(Group *g)
 		free(tmp);
 	}
 	free(g);
-	return 0;
+	return RET_OK;
 }
 
 static int sendto_group_butone(Group *g, Client *c, char *msg, int len)
@@ -111,7 +111,7 @@ static int sendto_group_butone(Group *g, Client *c, char *msg, int len)
 	tmp = g->clients;
 	buffer = ebuf_begin_share(msg, len);
 	if(!buffer)
-		return -1;
+		return RET_NOMEM;
 	while(tmp) {
 		this = tmp->cl;
 		if(this == c)
@@ -121,7 +121,7 @@ static int sendto_group_butone(Group *g, Client *c, char *msg, int len)
 		tmp = tmp->prev;
 	}
 	ebuf_end_share(buffer);
-	return 0;
+	return RET_OK;
 }
 
 /* send a message to all clients in a group */
@@ -157,24 +157,24 @@ static Group *create_group_t(void)
 }
 
 /* associate a group with a socket engine */
-Group *create_supergroup(SockEng *s)
+int create_supergroup(SockEng *s, Group **g)
 {
 	Group *new;
 	gLink *link;
 
 	if(!s)
-		return NULL;
+		return RET_INVAL;
 
 	new = create_group_t();
 	if(!new)
-		return NULL;
+		return RET_NOMEM;
 
 	new->parent = NULL;
 	
 	/* associate the new group with the socket engine top level */
 	link = malloc(sizeof(gLink));
 	if(!link)
-		return NULL;
+		return RET_NOMEM;
 	
 	link->gr = new;
 	link->flags = 0;
@@ -191,7 +191,8 @@ Group *create_supergroup(SockEng *s)
 		s->groups->next = link;
 		s->groups = link;
 	}
-	return new;
+	*g = new;
+	return RET_OK;
 }
 
 /* associate a group with another group */

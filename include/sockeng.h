@@ -34,6 +34,14 @@
 #define DL_WARN  0x04
 #define DL_CRIT  0x08
 
+/* return codes */
+#define RET_OK		0	/* ok! */
+#define RET_UNDEF	1	/* unknown? */
+#define RET_INVAL	2	/* invalid argument */
+#define RET_NOMEM	3	/* no memory! */
+#define RET_NOSUCH	4	/* no such... something */
+#define RET_EXISTS	5	/* stuff still exists */
+
 /* typedefs make life easier */
 typedef struct _ipvx		ipvx;		/* ip abstraction */
 typedef struct _client 		Client;		/* a Client */
@@ -141,7 +149,7 @@ struct _listener {
 
 	int		flags;		/* flags? */
 
-	/* function prototypes */
+	/* functions */
 	int		(*qopts)(Listener *, int);
 	int		(*set_packeter)(Listener *, int (*)(Client *, char *, int));
 	int		(*set_parser)(Listener *, int (*)(Client *, char *, int));
@@ -165,6 +173,7 @@ struct _group {
 
 	Group		*parent;		/* parent group (if applicable) */
 
+	/* functions */
 	int		(*add)(Group *gr, Client *cl);		/* function for adding clients to this group */
 	int		(*remove)(Group *gr, Client *cl);	/* function for removing clients from this group */
 	Group		*(*create_subgroup)(Group *gr);		/* function to create a subgroup */
@@ -187,14 +196,16 @@ struct _sockeng {
 	myfd		*local[MAX_FDS];
 
 	/* functions */
-	Listener	*(*create_listener)(SockEng *, unsigned short, ipvx *);
-	Group		*(*create_group)(SockEng *);
+	int		(*create_listener)(SockEng *, unsigned short, ipvx *, Listener **);
+	int		(*create_group)(SockEng *, Group **);
 	int		(*poll)(SockEng *, time_t);
-	int		(*set_errorhandler)(SockEng *, int, void (*)(int, char *));
+	int		(*set_errorhandler)(SockEng *, void (*)(int, char *));
+	int		(*set_loglevel)(SockEng *, int);
+
 	void		(*error)(int, char *);
 };
 
 /* functions */
-extern SockEng *init_sockeng(void);
+extern int init_sockeng(SockEng **);
 
 #endif

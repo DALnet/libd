@@ -7,18 +7,31 @@
 #include "sockeng.h"
 #include "engine.h"
 
-extern Group *create_supergroup(SockEng *);
-extern Listener *create_listener(SockEng *, unsigned short, ipvx *);
+extern int create_supergroup(SockEng *, Group **);
+extern int create_listener(SockEng *, unsigned short, ipvx *, Listener **);
 
-static int set_errorhandler(SockEng *s, int level, void (*func)(int, char *))
+static int set_errorhandler(SockEng *s, void (*func)(int, char *))
 {
-	if(!s)
-		return -1;
-	if(func)
+	if(s && func) {
 		s->error = func;
-	if(level)
-		s->loglev = level;
-	return 0;
+		return RET_OK;
+	}
+	return RET_INVAL;
+}
+
+static int set_loglevel(SockEng *s, int i)
+{
+	switch(i) {
+		case DL_DEBUG:
+		case DL_INFO:
+		case DL_WARN:
+		case DL_CRIT:
+			s->loglev = i;
+			return RET_OK;
+		default:
+			return RET_INVAL;
+	}
+	return RET_UNDEF;
 }
 
 void s_err(SockEng *s, int level, int err, char *pattern, ...)
@@ -35,11 +48,13 @@ void s_err(SockEng *s, int level, int err, char *pattern, ...)
 	va_end(vl);
 }
 
-SockEng *init_sockeng()
+int init_sockeng(SockEng **s)
 {
 	SockEng *new;
 
 	new = malloc(sizeof(SockEng));
+	if(!new)
+		return RET_NOMEM;
 
 	/* data */
 	new->groups = NULL;
@@ -53,9 +68,15 @@ SockEng *init_sockeng()
 	new->create_group = create_supergroup;
 	new->poll = engine_read_message;
 	new->set_errorhandler = set_errorhandler;
+	new->set_loglevel = set_loglevel;
 
 	engine_init(new);
-	ebuf_init();
+	if(ebuf_init()) {
+		free(new);
+		return RET_NOMEM;
+	}
 
-	return new;
+	*s = new;
+
+	return RET_OK;
 }

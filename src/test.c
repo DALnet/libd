@@ -42,6 +42,10 @@ int main(int argc, char *argv[])
 		l1->set_packeter(l1, client_packet_thingy);
 		l1->set_parser(l1, client_echo_parser);
 		l1->set_onclose(l1, client_disconnecty);
+		if(l1->up(l1)) {
+			printf("no listener create(2)\n");
+			return -1;
+		}
 	}
 	while(1) {
 		if(s->poll(s, 1)) {

@@ -155,6 +155,8 @@ struct _listener {
 	int		(*set_parser)(Listener *, int (*)(Client *, char *, int));
 	int		(*set_onconnect)(Listener *, int (*)(Client *));
 	int		(*set_onclose)(Listener *, void (*)(Client *, int));
+	int		(*up)(Listener *);
+	int		(*down)(Listener *);
 
 	int		(*packeter)(Client *, char *, int);
 	int		(*parser)(Client *, char *, int);

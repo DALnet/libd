@@ -233,6 +233,28 @@ out_err:
 	return -1;
 }
 
+static int listener_up(Listener *l)
+{
+	if(!l->packeter || !l->parser)
+		return RET_INVAL;
+
+	if(l->addr.type == TYPE_IPV6) {
+		if(create_tcp6_listener(l))
+			return RET_INVAL;
+		return RET_OK;
+	} else if(create_tcp4_listener(l))
+		return RET_INVAL;
+	return RET_OK;
+}
+
+static int listener_down(Listener *l)
+{
+	mfd_del(l->sockeng, &l->fdp);
+	close(l->fdp.fd);
+	l->fdp.fd = -1;
+	return RET_OK;
+}
+
 int create_listener(SockEng *s, unsigned short port, ipvx *address, Listener **l)
 {
 	Listener *new;
@@ -265,20 +287,11 @@ int create_listener(SockEng *s, unsigned short port, ipvx *address, Listener **l
 	new->set_parser = listener_setparser;
 	new->set_onconnect = listener_setonconnect;
 	new->set_onclose = listener_setonclose;
+	new->up = listener_up;
+	new->down = listener_down;
 
-	/* FIXME:  egg problem possible here.. must fix */
 	new->packeter = NULL;
 	new->parser = NULL;
-
-	if(address && address->type == TYPE_IPV6) {
-		if(create_tcp6_listener(new)) {
-			free(new);
-			return RET_INVAL;
-		}
-	} else if(create_tcp4_listener(new)) {
-		free(new);
-		return RET_INVAL;
-	}
 
 	*l = new;
 

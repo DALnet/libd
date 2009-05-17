@@ -1,9 +1,10 @@
 CC = @CC@
 RM = @RM@
-INCLUDES = -I../include
+INCLUDES = -I../include @SSL_INCLUDES@
 CFLAGS = @CFLAGS@
+LDFLAGS = @LIBS@ @SSL_LIBS@
 
-SOURCES = client.c sockeng.c group.c listener.c mfd.c test.c engine.c ebuf.c
+SOURCES = client.c sockeng.c group.c listener.c mfd.c test.c engine.c ebuf.c wrap_ssl.c
 
 OBJECTS = $(SOURCES:.c=.o)
 
@@ -11,7 +12,7 @@ OBJECTS = $(SOURCES:.c=.o)
 	$(CC) $(CFLAGS) $(INCLUDES) -c $<
 
 build: $(OBJECTS)
-	$(CC) $(CFLAGS) -o test $(OBJECTS)
+	$(CC) $(CFLAGS) -o test $(OBJECTS) $(LDFLAGS)
 
 clean:
 	$(RM) -f $(OBJECTS) test

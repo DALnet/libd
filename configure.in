@@ -18,6 +18,7 @@ AH_TEMPLATE([HAVE_COMPRESSION_ON],[If we support compression])
 AH_TEMPLATE([SYS_ERRLIST_DECLARED],[If the sys_errlist array is defined])
 AH_TEMPLATE([MAXCONNECTIONS],[Maximum Connections we allow])
 AH_TEMPLATE([WRITEV_IOV],[Maxmimum number of iovecs supported by writev()])
+AH_TEMPLATE([USE_SSL],[Defined if we want to compile in SSL support])
 
 dnl Put our options of here for ease of reading.
 
@@ -32,6 +33,7 @@ AC_ARG_WITH(socketengine,
                                 kqueue epoll devpoll poll select ],
 [ check_sengine=$withval ],
 [ check_sengine="yes" ])
+
 AC_ARG_WITH(maxconnections,
 [  --with-maxconnections=NUMBER   Set the maximum number of sockets.],
 [ check_maxconnections=$withval ],
@@ -174,13 +176,11 @@ if test "X$cf_enable_openssl" != "Xno" ; then
   dnl If we have a basedir defined, then everything is okay.  Otherwise,
   dnl we have a problem.
   if test "X$cf_openssl_basedir" != "X" ; then
-    LIBS="$save_LIBS $SSL_LIBS -lcrypto"
+    LIBS="$save_LIBS $SSL_LIBS -lssl"
     AC_MSG_RESULT($cf_openssl_basedir)
     cf_enable_openssl="yes"
     encryption="enabled"
-    AC_DEFINE(HAVE_ENCRYPTION_ON)
-    ENCRYPT_SRC="rc4.c dh.c"
-    AC_SUBST(ENCRYPT_SRC)
+    AC_DEFINE(USE_SSL)
   else
     AC_MSG_RESULT(not found.  Please check your path.)
     cf_enable_openssl="no"

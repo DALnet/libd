@@ -69,11 +69,11 @@ VAR,[VAR="no, unknown"
 #       need to be "-G0 -rdatashared" for strictmode but
 #       I am not sure what effect that has really.         - guidod
 for ac_arg dnl
-in "-pedantic  % -Wall -ansi -pedantic"       dnl   GCC
+in "-pedantic  % -Wall -pedantic"       dnl   GCC
    "-xstrconst % -v -Xc"                      dnl Solaris C
    "-std1      % -verbose -w0 -warnprotos -std1" dnl Digital Unix
    " % -qlanglvl=ansi -qsrcmsg -qinfo=all:noppt:noppc:noobs:nocnd" dnl AIX
-   " % -ansi -ansiE -fullwarn"                dnl IRIX
+   " % -ansiE -fullwarn"                dnl IRIX
    "+ESlit     % +w1 -Aa"                     dnl HP-UX C
    "-Xc        % -pvctl[,]fullmsg -Xc"        dnl NEC SX-5 (Super-UX 10)
    "-h conform % -h msglevel 2 -h conform"    dnl Cray C (Unicos)
@@ -117,11 +117,11 @@ VAR,[VAR="no, unknown"
 #       need to be "-G0 -rdatashared" for strictmode but
 #       I am not sure what effect that has really.         - guidod
 for ac_arg dnl
-in "-pedantic  % -Wall -ansi -pedantic"       dnl   GCC
+in "-pedantic  % -Wall -pedantic"       dnl   GCC
    "-xstrconst % -v -Xc"                      dnl Solaris C
    "-std1      % -verbose -w0 -warnprotos -std1" dnl Digital Unix
    " % -qlanglvl=ansi -qsrcmsg -qinfo=all:noppt:noppc:noobs:nocnd" dnl AIX
-   " % -ansi -ansiE -fullwarn"                dnl IRIX
+   " % -ansiE -fullwarn"                dnl IRIX
    "+ESlit     % +w1 -Aa"                     dnl HP-UX C
    "-Xc        % -pvctl[,]fullmsg -Xc"        dnl NEC SX-5 (Super-UX 10)
    "-h conform % -h msglevel 2 -h conform"    dnl Cray C (Unicos)

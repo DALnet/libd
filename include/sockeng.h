@@ -16,6 +16,16 @@
 #include <unistd.h>
 
 #include "setup.h"
+
+#ifdef USE_SSL
+#include <openssl/rsa.h>
+#include <openssl/crypto.h>
+#include <openssl/x509.h>
+#include <openssl/pem.h>
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#endif
+
 #include "ebuf.h"
 
 #define MAX_FDS MAXCONNECTIONS
@@ -196,6 +206,9 @@ struct _sockeng {
 	int		loglev;
 
 	myfd		*local[MAX_FDS];
+#ifdef USE_SSL
+	SSL_CTX		*sslctx;
+#endif
 
 	/* functions */
 	int		(*create_listener)(SockEng *, unsigned short, ipvx *, Listener **);

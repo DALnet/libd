@@ -121,16 +121,18 @@ static void accept_tcp6_connect(SockEng *s, void *in, int rr, int rw)
 		new->addr.type = TYPE_IPV6;
 		memcpy(&new->addr.ip, &addr.sin6_addr, sizeof(struct in6_addr));
 		new->port = ntohs(addr.sin6_port);
+		mfd_add(s, &new->fdp, new, client_do_rw);
 #ifdef USE_SSL
-		if((l->flags & LISTEN_SSL) && sslaccept(new))
+		if((l->flags & LISTEN_SSL) && sslaccept(new)) {
 			new->close(new);	/* failed SSL negotiation, drop it */
+			continue;
+		}
 #endif
 		if(l->onconnect != NULL && (*l->onconnect)(new)) {
 			new->close(new);
 			continue;
 		}
 		/* FIXME: set new client socket options */
-		mfd_add(s, &new->fdp, new, client_do_rw);
 		mfd_read(s, &new->fdp);
 	}
 }
@@ -154,16 +156,18 @@ static void accept_tcp4_connect(SockEng *s, void *in, int rr, int rw)
 		new->addr.type = TYPE_IPV4;
 		memcpy(&new->addr.ip, &addr.sin_addr, sizeof(struct in_addr));
 		new->port = ntohs(addr.sin_port);
+		mfd_add(s, &new->fdp, new, client_do_rw);
 #ifdef USE_SSL
-		if((l->flags & LISTEN_SSL) && sslaccept(new))
+		if((l->flags & LISTEN_SSL) && sslaccept(new)) {
 			new->close(new);	/* failed SSL negotation, drop it */
+			continue;
+		}
 #endif
 		if(l->onconnect != NULL && (*l->onconnect)(new)) {
 			new->close(new);
 			continue;
 		}
 		/* FIXME:  set new client socket options */
-		mfd_add(s, &new->fdp, new, client_do_rw);
 		mfd_read(s, &new->fdp);
 	}
 }
@@ -292,7 +296,7 @@ int create_listener(SockEng *s, unsigned short port, ipvx *address, Listener **l
 
 	/* functions */
 
-	new->qopts = listener_qopts;
+	new->set_options = listener_qopts;
 	new->set_packeter = listener_setpacketer;
 	new->set_parser = listener_setparser;
 	new->set_onconnect = listener_setonconnect;

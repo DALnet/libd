@@ -6,6 +6,7 @@
 
 #include "sockeng.h"
 #include "engine.h"
+#include "wrap_ssl.h"
 
 extern int create_supergroup(SockEng *, Group **);
 extern int create_listener(SockEng *, unsigned short, ipvx *, Listener **);
@@ -48,6 +49,13 @@ void s_err(SockEng *s, int level, int err, char *pattern, ...)
 	va_end(vl);
 }
 
+#ifdef USE_SSL
+static int setup_ssl(SockEng *s, char *keypath, char *certpath)
+{
+	return ssl_init(s, certpath, keypath);
+}
+#endif
+
 int init_sockeng(SockEng **s)
 {
 	SockEng *new;
@@ -69,6 +77,9 @@ int init_sockeng(SockEng **s)
 	new->poll = engine_read_message;
 	new->set_errorhandler = set_errorhandler;
 	new->set_loglevel = set_loglevel;
+#ifdef USE_SSL
+	new->init_ssl = setup_ssl;
+#endif
 
 	engine_init(new);
 	if(ebuf_init()) {

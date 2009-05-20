@@ -167,7 +167,7 @@ struct _listener {
 	int		flags;		/* flags? */
 
 	/* functions */
-	int		(*qopts)(Listener *, int);
+	int		(*set_options)(Listener *, int);
 	int		(*set_packeter)(Listener *, int (*)(Client *, char *, int));
 	int		(*set_parser)(Listener *, int (*)(Client *, char *, int));
 	int		(*set_onconnect)(Listener *, int (*)(Client *));
@@ -223,6 +223,9 @@ struct _sockeng {
 	int		(*poll)(SockEng *, time_t);
 	int		(*set_errorhandler)(SockEng *, void (*)(int, char *));
 	int		(*set_loglevel)(SockEng *, int);
+#ifdef USE_SSL
+	int		(*init_ssl)(SockEng *, char *, char *);
+#endif
 
 	void		(*error)(int, char *);
 };

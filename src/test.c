@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include "sockeng.h"
 
+#define CERTFILE "./test.crt"
+#define KEYFILE "./test.key"
+
 int client_packet_thingy(Client *c, char *buf, int len)
 {
 	int i = 0;
@@ -31,11 +34,15 @@ void client_disconnecty(Client *s, int err)
 int main(int argc, char *argv[])
 {
 	SockEng *s;
-	Listener *l1;
+	Listener *l1, *ssll;
 
 	if(init_sockeng(&s))
 		return -1;
-	 if(s->create_listener(s, 1111, NULL, &l1)) {
+	if(s->init_ssl(s, KEYFILE, CERTFILE)) {
+		printf("ssl initialization failed\n");
+		return -1;
+	}
+	if(s->create_listener(s, 1111, NULL, &l1)) {
 		printf("no listener create\n");
 		return -1;
 	} else {
@@ -47,6 +54,20 @@ int main(int argc, char *argv[])
 			return -1;
 		}
 	}
+	if(s->create_listener(s, 1112, NULL, &ssll)) {
+		printf("ssl listener create failed\n");
+		return -1;
+	} else {
+		ssll->set_packeter(ssll, client_packet_thingy);
+		ssll->set_parser(ssll, client_echo_parser);
+		ssll->set_onclose(ssll, client_disconnecty);
+		ssll->set_options(ssll, LISTEN_SSL);
+		if(ssll->up(ssll)) {
+			printf("ssl listener failed to come up\n");
+			return -1;
+		}
+	}
+
 	while(1) {
 		if(s->poll(s, 1)) {
 			printf("poll error\n");

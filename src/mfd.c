@@ -36,8 +36,8 @@ int mfd_add(SockEng *s, myfd *fd, void *owner, void (*cb)(SockEng *, void *, int
 void mfd_del(SockEng *s, myfd *fd)
 {
 	fd_assert(s, fd);
-	s->local[fd->fd] = NULL;
 	engine_del_fd(s, fd->fd);
+	s->local[fd->fd] = NULL;
 }
 
 void mfd_read(SockEng *s, myfd *fd)

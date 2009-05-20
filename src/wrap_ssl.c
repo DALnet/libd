@@ -26,7 +26,7 @@ static int call_ssl(int type, SSL *id, void *buf, int len)
 			ret = SSL_accept(id);
 			break;
 		case CALL_SSLSHUT:
-			while(ret || i < 4) {
+			while(ret != 1 && i < 4) {
 				ret = SSL_shutdown(id);
 				i++;
 			}
@@ -75,13 +75,13 @@ int sslaccept(Client *c)
 		return -1;
 	SSL_set_fd(id, c->fdp.fd);
 	ret = call_ssl(CALL_SSLACCEPT, id, NULL, 0);
-	if(ret) {
+	if(ret != 1) {
 		call_ssl(CALL_SSLSHUT, id, NULL, 0);
 		SSL_free(id);
 		return -1;
 	}
 	c->sslid = id;
-	return ret;
+	return 0;
 }
 
 void sslshut(SSL *id) 

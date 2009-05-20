@@ -4,6 +4,7 @@
 
 #include "sockeng.h"
 #include "mfd.h"
+#include "wrap_ssl.h"
 
 static int client_send(Client *c, char *msg, int len)
 {
@@ -20,6 +21,10 @@ static int client_close(Client *c)
 	ebuf_delete(&c->recvQ, eBufLength(&c->recvQ));
 	ebuf_delete(&c->sendQ, eBufLength(&c->sendQ));
 	mfd_del(c->sockeng, &c->fdp);
+#ifdef USE_SSL
+	if(c->sslid)
+		sslshut(c->sslid);
+#endif
 	close(c->fdp.fd);
 	free(c);
 	return RET_OK;
@@ -71,7 +76,14 @@ static void client_doread(Client *c)
 	static char readbuf[BUFSIZE];
 	int len, plen;
 
+#ifdef USE_SSL
+	if(c->sslid)
+		len = sslread(c->sslid, readbuf, sizeof(readbuf));
+	else
+		len = recv(c->fdp.fd, readbuf, sizeof(readbuf), 0);
+#else
 	len = recv(c->fdp.fd, readbuf, sizeof(readbuf), 0);
+#endif
 	if(len < 0) {
 		if(errno == EWOULDBLOCK || errno == EAGAIN)
 			return;
@@ -108,7 +120,15 @@ static void client_dowrite(Client *c)
 		return;
 	}
 	num = ebuf_mapiov(&c->sendQ, v);
+#ifdef USE_SSL
+	/* FIXME:  revisit this - maybe we should try to do mulitple sslwrite() calls here to flush buffers faster */
+	if(c->sslid)
+		ret = sslwrite(c->sslid, v->iov_base, v->iov_len);
+	else
+		ret = writev(c->fdp.fd, v, num);
+#else
 	ret = writev(c->fdp.fd, v, num);
+#endif
 	if(ret > 0)
 		ebuf_delete(&c->sendQ, ret);
 	if(!(eBufLength(&c->sendQ) > 0))

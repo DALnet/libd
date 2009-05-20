@@ -65,14 +65,29 @@ int sslwrite(SSL *id, void *buf, int sz)
 	return call_ssl(CALL_SSLWRITE, id,  buf, sz);
 }
 
-int sslaccept(SSL *id)
+int sslaccept(Client *c)
 {
-	return call_ssl(CALL_SSLACCEPT, id, NULL, 0);
+	int ret;
+	SSL *id;
+
+	id = SSL_new(c->sockeng->sslctx);
+	if(!id)
+		return -1;
+	SSL_set_fd(id, c->fdp.fd);
+	ret = call_ssl(CALL_SSLACCEPT, id, NULL, 0);
+	if(ret) {
+		call_ssl(CALL_SSLSHUT, id, NULL, 0);
+		SSL_free(id);
+		return -1;
+	}
+	c->sslid = id;
+	return ret;
 }
 
-int sslshut(SSL *id) 
+void sslshut(SSL *id) 
 {
-	return call_ssl(CALL_SSLSHUT, id, NULL, 0);
+	call_ssl(CALL_SSLSHUT, id, NULL, 0);
+	SSL_free(id);
 }
 
 

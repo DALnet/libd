@@ -4,6 +4,7 @@
 
 #include "sockeng.h"
 #include "mfd.h"
+#include "wrap_ssl.h"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -16,6 +17,7 @@ extern Client *create_client_t(Listener *);
 
 static int listener_qopts(Listener *l, int opts)
 {
+	l->flags = opts;
 	return RET_OK;
 }
 
@@ -119,6 +121,10 @@ static void accept_tcp6_connect(SockEng *s, void *in, int rr, int rw)
 		new->addr.type = TYPE_IPV6;
 		memcpy(&new->addr.ip, &addr.sin6_addr, sizeof(struct in6_addr));
 		new->port = ntohs(addr.sin6_port);
+#ifdef USE_SSL
+		if((l->flags & LISTEN_SSL) && sslaccept(new))
+			new->close(new);	/* failed SSL negotiation, drop it */
+#endif
 		if(l->onconnect != NULL && (*l->onconnect)(new)) {
 			new->close(new);
 			continue;
@@ -148,6 +154,10 @@ static void accept_tcp4_connect(SockEng *s, void *in, int rr, int rw)
 		new->addr.type = TYPE_IPV4;
 		memcpy(&new->addr.ip, &addr.sin_addr, sizeof(struct in_addr));
 		new->port = ntohs(addr.sin_port);
+#ifdef USE_SSL
+		if((l->flags & LISTEN_SSL) && sslaccept(new))
+			new->close(new);	/* failed SSL negotation, drop it */
+#endif
 		if(l->onconnect != NULL && (*l->onconnect)(new)) {
 			new->close(new);
 			continue;

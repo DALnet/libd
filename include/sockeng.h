@@ -128,6 +128,10 @@ struct _client {
 	unsigned short	port;			/* the remote port */
 	int		type;			/* the type of this connection (tcp/udp/raw) */
 
+#ifdef USE_SSL
+	SSL		*sslid;			/* ssl handle for this client */
+#endif
+
 	Listener	*listener;		/* listener this client came in on (optional) */
 	SockEng		*sockeng;		/* socket engine for this client */
 
@@ -148,6 +152,9 @@ struct _client {
 /*
  * The listener structure provides all necessary details in order to build and maintain a listener
  */
+
+#define LISTEN_SSL 0x01
+
 struct _listener {
 	myfd		fdp;		/* file descriptor abstraction */
 	unsigned short 	port;		/* port of the descriptor */
